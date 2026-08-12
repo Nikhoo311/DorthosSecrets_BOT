@@ -1,0 +1,20 @@
+{
+    "clientID": "APPLICATION_ID",
+    "serverID": "SERVER_ID",
+
+    "color": {
+        "blue":"#00ADB5",
+        "pastel_dark_blue": "#056676",
+        "red": "#DD2E44",
+        "pastel_red":"#D35D6E",
+        "dark_grey":"#393E46",
+        "dark":"#0F0E0E",
+        "orange": "#f38b23",
+        "pastel_orange": "#E08F62",
+        "green": "#43c849",
+        "pastel_green":"#9DAB86",
+        "pastel_brown":"#876445",
+        "pastel_teal":"#A3DDCB",
+        "white": "#F4F4F4"
+    }
+}

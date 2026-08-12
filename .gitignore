@@ -1,0 +1,7 @@
+config/*.json
+!config/*.example.json
+node_modules/
+img/
+pdf/
+.env
+run.bat
