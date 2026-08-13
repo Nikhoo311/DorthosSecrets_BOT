@@ -6,26 +6,14 @@ const SEARCH_TIMEOUT_MS = 8000;
 // Pages "listing" (sommaires de catégorie) à exclure des résultats : elles
 // contiennent des bouts de tous les guides/outils à la fois et peuvent donc
 // bien matcher n'importe quelle recherche sans être la bonne réponse précise.
-const LISTING_PATHS = new Set(["/guides", "/tools"]);
-const CATEGORY_PATHS = {
-  guide: "/guides/",
-  outil: "/tools/",
-};
+const LISTING_PATHS = new Set(["", "/guides", "/tools"]);
 
 function isListingPage(url) {
+  if (url === "/") return true;
+
   try {
     const path = new URL(url, SITE_URL).pathname.replace(/\/$/, ""); // enlève le / final
     return LISTING_PATHS.has(path);
-  } catch {
-    return false;
-  }
-}
-
-function belongsToCategory(url, category) {
-  if (category === "tout") return true;
-
-  try {
-    return new URL(url, SITE_URL).pathname.startsWith(CATEGORY_PATHS[category]);
   } catch {
     return false;
   }
@@ -48,6 +36,8 @@ const STOPWORDS = new Set([
 ]);
 
 function extractKeywords(query) {
+  if (!query) return null;
+
   const words = query
     .toLowerCase()
     .replace(/['’]/g, " ")
@@ -67,7 +57,7 @@ function withTimeout(promise, ms) {
   ]);
 }
 
-async function searchSite(query, limit = 5, category = "tout") {
+async function searchSite(query, { limit = 5, tag } = {}) {
   const page = await getSearchPage();
   const cleanedQuery = extractKeywords(query);
 
@@ -78,13 +68,13 @@ async function searchSite(query, limit = 5, category = "tout") {
 
     const results = await withTimeout(
       page.evaluate(
-        async ({ query, fetchCount }) => {
+        async ({ query, fetchCount, tag }) => {
           const pagefind = await import("/pagefind/pagefind.js");
-          const search = await pagefind.search(query);
+          const search = await pagefind.search(query, tag ? { filters: { tag } } : undefined);
           const top = search.results.slice(0, fetchCount);
           return Promise.all(top.map((r) => r.data()));
         },
-        { query: cleanedQuery, fetchCount }
+        { query: cleanedQuery, fetchCount, tag }
       ),
       SEARCH_TIMEOUT_MS
     );
@@ -93,17 +83,21 @@ async function searchSite(query, limit = 5, category = "tout") {
     // chaque résultat, AVANT tout filtrage/traitement de notre côté.
     // Utile pour vérifier si le souci vient du bundle Pagefind lui-même ou
     // de notre code. À retirer une fois le diagnostic fait.
-    console.log("[debug pagefind] résultats bruts:", results.map((r) => ({ title: r.meta?.title, url: r.url })));
-
-    const filtered = results.filter(
-      (result) => !isListingPage(result.url) && belongsToCategory(result.url, category)
+    console.log(
+      "[debug pagefind] résultats bruts:",
+      results
+        .filter((result) => !isListingPage(result.url))
+        .map((result) => ({ title: result.meta?.title, url: result.url }))
     );
+
+    const filtered = results.filter((result) => !isListingPage(result.url));
 
     return filtered.slice(0, limit).map((r) => ({
       title: r.meta?.title ?? "Sans titre",
       url: SITE_URL + r.url,
       excerpt: r.excerpt?.replace(/<\/?mark>/g, "**"), // <mark> -> gras Discord
       image: r.meta?.image ? SITE_URL + r.meta.image : null,
+      tags: r.filters?.tag ?? [],
     }));
   } catch (err) {
     resetSearchPage();

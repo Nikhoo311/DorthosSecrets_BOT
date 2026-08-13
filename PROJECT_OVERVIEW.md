@@ -10,7 +10,7 @@ Le projet ne contient donc ni le site Dorthos Secrets ni son index : il est un c
 
 ## Périmètre fonctionnel actuel
 
-- Commande slash : `/recherche terme:<texte obligatoire>`.
+- Commandes slash : `/recherche` et son alias fonctionnel `/aide`, ouvrant toutes deux la modal de recherche.
 - Recherche dans l’index Pagefind du site configuré par `SITE_URL`.
 - Simplification des requêtes françaises avant recherche (retrait de mots vides).
 - Exclusion des pages de sommaire `/guides` et `/tools`, pour favoriser une page de contenu précise.
@@ -18,7 +18,7 @@ Le projet ne contient donc ni le site Dorthos Secrets ni son index : il est un c
 - Embed Discord enrichi : titre, extrait, image miniature éventuelle, catégorie, URL et date.
 - Deux catégories visuelles : `🛠️ Outil` pour les URL sous `/tools/`, sinon `📖 Guide`.
 - Bouton **Nouvelle recherche** ouvrant un modal ; le résultat existant est remplacé, sans créer un nouveau message.
-- Filtre de catégorie dans le modal : tous les contenus (par défaut), guides ou outils.
+- Filtre de catégorie dans le modal : toutes les catégories (par défaut), stuff, argent, optimisation ou métier.
 - Message de bienvenue lors de l’arrivée d’un membre, envoyé dans le salon configuré ou le salon système du serveur.
 - Script séparé de diagnostic pour lister les pages remontées par Pagefind.
 
@@ -81,9 +81,11 @@ Démarrage
   → enregistre les slash commands auprès de Discord
   → connexion avec TOKEN
 
-/recherche <terme>
+/recherche ou /aide
+  → ouvre la modal de recherche
+  → saisie du terme et du filtre de catégorie
   → deferReply()
-  → searchSite(terme, 1)
+  → searchSite(terme, { limit: 1, tag })
   → Chromium ouvre/réutilise dorthos-secrets.fr
   → Pagefind recherche les mots-clés nettoyés
   → /guides et /tools sont retirés des résultats
@@ -138,7 +140,7 @@ Sur une erreur ou un timeout, la page Playwright est invalidée puis l’erreur 
 
 ### Commande et composants
 
-`src/commands/recherche.js` déclare `/recherche`, différée avant le travail réseau. Elle demande une limite de 1 et affiche donc uniquement `results[0]`. En cas d’échec, elle avertit l’utilisateur de réessayer.
+`src/commands/recherche.js` déclare `/recherche` et ouvre la modal de recherche. `/aide` réutilise le même comportement. La modal demande une limite de 1 et affiche donc uniquement `results[0]`.
 
 `btn-recherche-nouvelle.js` ouvre le modal `modal-recherche` avec un champ court obligatoire `terme`.
 

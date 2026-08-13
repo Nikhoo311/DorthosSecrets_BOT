@@ -21,6 +21,10 @@ function createActionRow(...components) {
     return new ActionRowBuilder().addComponents(...components);
 }
 
+function formatTags(tags = []) {
+    return tags.length > 0 ? tags.map((tag) => `\`${tag}\``).join(" ") : "Aucun tag";
+}
+
 function buildResultMessage(best, query) {
     if (!best) {
         const embed = new EmbedBuilder()
@@ -37,7 +41,10 @@ function buildResultMessage(best, query) {
         .setURL(best.url)
         .setDescription(best.excerpt)
         .setColor(category.color)
-        .addFields({ name: "Catégorie", value: category.label, inline: true })
+        .addFields(
+            { name: "Type", value: category.label, inline: true },
+            { name: "Tags", value: formatTags(best.tags), inline: true },
+        )
         .setFooter({ text: `Recherche : "${query}"` })
         .setTimestamp();
 

@@ -4,9 +4,9 @@ Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets
 
 ## Fonctionnalités
 
-- Commande slash `/recherche` pour interroger le guide.
+- Commandes slash `/recherche` et `/aide` pour ouvrir la recherche dans le guide.
 - Recherche optimisée : retrait des mots vides français et exclusion des pages sommaires.
-- Filtre dans la modal : tous les contenus, guides ou outils.
+- Filtre dans la modal : toutes les catégories, stuff, argent, optimisation ou métier.
 - Embed Discord avec titre, extrait, catégorie, miniature éventuelle et lien direct.
 - Bouton **Nouvelle recherche** pour relancer une recherche sans créer un nouveau message.
 - Message de bienvenue configurable pour les nouveaux membres.
@@ -80,13 +80,13 @@ WELCOME_CHANNEL_ID=
 npm run dev
 ```
 
-Le bot enregistre les commandes puis se connecte à Discord. Utilisez ensuite :
+Le bot enregistre les commandes puis se connecte à Discord. Utilisez ensuite `/recherche` ou `/aide` :
 
 ```text
-/recherche terme:cristaux pve
+/recherche
 ```
 
-Le bouton **Nouvelle recherche** ouvre un formulaire incluant le terme et le filtre de catégorie.
+La modal permet de saisir le terme et de choisir le filtre de catégorie.
 
 ## Structure du projet
 
