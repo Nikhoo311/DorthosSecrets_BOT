@@ -1,6 +1,6 @@
 # Dorthos Secrets BOT
 
-Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets.fr/). Il permet de retrouver rapidement un guide ou un outil depuis Discord, à partir de l’index Pagefind du site.
+Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets.fr/). Il permet de retrouver rapidement un guide ou un outil depuis Discord, à partir de l’index JSON du site.
 
 ## Fonctionnalités
 
@@ -10,7 +10,6 @@ Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets
 - Embed Discord avec titre, extrait, catégorie, miniature éventuelle et lien direct.
 - Bouton **Nouvelle recherche** pour relancer une recherche sans créer un nouveau message.
 - Message de bienvenue configurable pour les nouveaux membres.
-- Script de diagnostic Pagefind pour lister les pages indexées.
 
 ## Prérequis
 
@@ -24,7 +23,6 @@ Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets
 git clone https://github.com/VOTRE_UTILISATEUR/dorthos-secrets-bot.git
 cd dorthos-secrets-bot
 npm install
-npx playwright install chromium
 ```
 
 Copiez ensuite la configuration d’exemple :
@@ -63,13 +61,15 @@ Créez un fichier `.env` à la racine du projet :
 TOKEN=VOTRE_TOKEN_DISCORD
 DEV_MODE=true
 SITE_URL=https://dorthos-secrets.fr/
+PAGES_INDEX_URL=https://dorthos-secrets.fr/pages.json
 WELCOME_CHANNEL_ID=
 ```
 
 - `TOKEN` : token du bot Discord. Ne le partagez jamais et ne le versionnez pas.
 - `DEV_MODE=true` : enregistre la commande instantanément sur `serverID`.
 - `DEV_MODE=false` : enregistre la commande globalement ; Discord peut prendre jusqu’à une heure pour propager la modification.
-- `SITE_URL` : URL du site Dorthos Secrets et de son index Pagefind.
+- `SITE_URL` : URL du site Dorthos Secrets.
+- `PAGES_INDEX_URL` : URL de l’index JSON des pages ; par défaut `${SITE_URL}/pages.json`.
 - `WELCOME_CHANNEL_ID` : identifiant optionnel du salon de bienvenue. Sans valeur, le bot utilise le salon système du serveur s’il est configuré.
 
 > Activez aussi l’intent **Server Members Intent** dans le portail développeur Discord : il est nécessaire au message de bienvenue (`guildMemberAdd`).
@@ -107,28 +107,17 @@ src/
     └── utils/Logger.js            # logs console
 
 search/
-├── browser.js                     # navigateur Playwright partagé
-├── pagefind.js                    # recherche et filtrage Pagefind
+├── siteIndex.js                   # recherche dans l’index JSON distant
 └── resultMessage.js               # construction des embeds Discord
 
 config/
 └── examples/config.example.json   # modèle de configuration
 ```
 
-## Diagnostic de l’index
-
-Pour afficher les pages indexées par Pagefind :
-
-```bash
-node list-indexed-pages.mjs
-```
-
-Le script utilise un terme sonde (`Gear Progression`). Modifiez `PROBE_TERM` dans le fichier si ce terme n’est plus présent sur toutes les pages du site.
-
 ## Dépannage
 
 - **La commande n’apparaît pas** : vérifiez `clientID`, `serverID`, `TOKEN` et `DEV_MODE`. En mode global, attendez la propagation Discord.
-- **La recherche échoue** : vérifiez `SITE_URL`, la disponibilité du site et l’installation de Chromium par Playwright.
+- **La recherche échoue** : vérifiez `PAGES_INDEX_URL` et la disponibilité du site.
 - **Le message de bienvenue ne part pas** : activez l’intent membres dans le portail Discord, renseignez un salon valide ou configurez un salon système.
 
 ## Licence

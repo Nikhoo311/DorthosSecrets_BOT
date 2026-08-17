@@ -1,5 +1,5 @@
 const { ContainerBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
-const { searchSite } = require("../../search/pagefind.js");
+const { searchSite } = require("../../search/siteIndex.js");
 const { buildResultMessage } = require("../../search/resultMessage.js");
 
 const SEARCH_ERROR_MESSAGE = {
@@ -12,27 +12,14 @@ const SEARCH_ERROR_MESSAGE = {
 };
 
 async function updateSearchResult(interaction, message) {
-    if (!interaction.message) {
-        try {
-            await interaction.editReply(message);
-        } catch (error) {
-            if (error.code !== 10008) throw error;
-            await interaction.followUp(message);
-        }
-        return;
-    }
-
-    // Les anciens messages embed ne peuvent pas recevoir le flag Components V2 à l'édition.
-    if (!interaction.message.flags.has(MessageFlags.IsComponentsV2)) {
-        await interaction.followUp(message);
-        return;
-    }
-
     try {
-        await interaction.message.edit(message);
+        await interaction.editReply(message);
     } catch (error) {
         if (error.code !== 10008) throw error;
-        await interaction.followUp(message);
+        await interaction.followUp({
+            ...message,
+            flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+        });
     }
 }
 
@@ -44,19 +31,18 @@ module.exports = {
     async execute(interaction) {
         const query = interaction.fields.getTextInputValue("terme");
         const [tag] = interaction.fields.getStringSelectValues("recherche-categorie");
-        const updatesExistingMessage = Boolean(interaction.message);
 
-        if (updatesExistingMessage) {
+        if (interaction.message) {
             await interaction.deferUpdate();
         } else {
-            await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
+            await interaction.deferReply({ flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral] });
         }
 
         try {
             const results = await searchSite(query, { limit: 1, tag: tag === "tout" ? undefined : tag });
             await updateSearchResult(interaction, buildResultMessage(results[0], query));
         } catch (err) {
-            console.error("Erreur recherche Pagefind:", err);
+            console.error("Erreur recherche index JSON:", err);
             try {
                 await updateSearchResult(interaction, SEARCH_ERROR_MESSAGE);
             } catch (replyError) {

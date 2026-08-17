@@ -62,15 +62,16 @@ function buildResultMessage(best, query) {
         );
     }
 
+    console.log(best)
     container
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(best.excerpt || "_Aucun extrait disponible._"),
+            new TextDisplayBuilder().setContent(best.description || "_Aucune description disponible._"),
         )
         .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large))
         .addActionRowComponents(
             new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                    .setLabel("Voir le guide")
+                    .setLabel(`Voir ${best.type === "tool" ? "l'outil" : "le guide"}`)
                     .setStyle(ButtonStyle.Link)
                     .setURL(best.url)
                     .setEmoji("🔗"),
