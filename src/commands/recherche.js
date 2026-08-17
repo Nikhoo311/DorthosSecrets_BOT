@@ -7,6 +7,7 @@ async function execute(interaction) {
 
 module.exports = {
     name: "recherche",
+    aliases: ["aide", "help"],
     active: true,
     data: new SlashCommandBuilder()
         .setName("recherche")

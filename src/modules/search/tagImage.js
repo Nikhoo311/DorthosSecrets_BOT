@@ -1,4 +1,4 @@
-const { createCanvas, loadImage } = require("canvas");
+const { createCanvas, loadImage } = require("@napi-rs/canvas");
 
 const TAG_STYLES = {
     STUFF: { icon: "⚔", color: "#c4b5fd", rgb: "139, 92, 246" },

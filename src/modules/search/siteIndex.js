@@ -44,8 +44,8 @@ async function getIndex() {
       fields: ["title", "description", "content"],
       storeFields: ["title", "description", "url", "image", "type", "tags"],
       searchOptions: {
-        boost: { description: 3, content: 2, title: 1 },
-        fuzzy: 0.2,
+        boost: { title: 3, description: 2, content: 1 },
+        fuzzy: 0.3,
         prefix: true,
       },
     });
@@ -62,7 +62,7 @@ async function searchSite(query, { limit = 5, tag } = {}) {
   const tagNeedle = tag?.toLocaleLowerCase("fr");
 
   return index
-    .search(query, { fuzzy: 0.2, prefix: true })
+    .search(query, { fuzzy: 0.3, prefix: true })
     .filter((result) => !tagNeedle || !hasTags || result.tags.some((value) => value.toLocaleLowerCase("fr") === tagNeedle))
     .slice(0, limit)
     .map((result) => ({

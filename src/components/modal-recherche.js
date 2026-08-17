@@ -1,6 +1,6 @@
 const { ContainerBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
-const { searchSite } = require("../../search/siteIndex.js");
-const { buildResultMessage } = require("../../search/resultMessage.js");
+const { searchSite } = require("../modules/search/siteIndex.js");
+const { buildResultMessage } = require("../modules/search/resultMessage.js");
 
 const SEARCH_ERROR_MESSAGE = {
     components: [

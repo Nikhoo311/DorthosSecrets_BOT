@@ -102,13 +102,14 @@ src/
 │   ├── ready.js                   # confirmation de connexion
 │   ├── interactionCreate.js       # routage des interactions
 │   └── guildMemberAdd.js          # message de bienvenue
-└── functions/
-    ├── handlers/                  # chargeurs automatiques
-    └── utils/Logger.js            # logs console
-
-search/
-├── siteIndex.js                   # recherche dans l’index JSON distant
-└── resultMessage.js               # construction des embeds Discord
+├── functions/
+│   ├── handlers/                  # chargeurs automatiques
+│   └── utils/Logger.js            # logs console
+└── modules/
+    ├── search/
+    │   ├── siteIndex.js           # recherche dans l’index JSON distant
+    │   └── resultMessage.js       # construction des embeds Discord
+    └── stuff/                     # gear/leaderboard (/gs)
 
 config/
 └── examples/config.example.json   # modèle de configuration

@@ -16,9 +16,16 @@ module.exports = (client) => {
             const filePath = path.join(commandsPath, file);
             const command = require(filePath);
             if (!command.active) { continue; }
+
             commands.set(command.data.name, command);
             commandArray.push(command.data.toJSON());
             logger.command(`${command.data.name} est chargée avec succès !`);
+
+            for (const alias of command.aliases ?? []) {
+                commands.set(alias, command);
+                commandArray.push({ ...command.data.toJSON(), name: alias });
+                logger.command(`${alias} (alias de ${command.data.name}) est chargée avec succès !`);
+            }
         }
 
         const rest = new REST({ version: "9" }).setToken(process.env.TOKEN);

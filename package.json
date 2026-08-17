@@ -10,12 +10,13 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^1.0.0",
-    "canvas": "^3.2.3",
+    "@napi-rs/canvas": "^1.0.6",
     "chalk": "^4.1.2",
     "dayjs": "^1.11.5",
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.27.0",
     "dotenv": "^16.0.2",
+    "firebase-admin": "^14.2.0",
     "minisearch": "^7.2.0"
   }
 }

@@ -2,6 +2,8 @@
     "clientID": "APPLICATION_ID",
     "serverID": "SERVER_ID",
 
+    "officerRoleIds": ["OFFICER_ROLE_ID", "..."],
+
     "color": {
         "blue":"#00ADB5",
         "pastel_dark_blue": "#056676",
