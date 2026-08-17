@@ -40,7 +40,7 @@ module.exports = {
 
         try {
             const results = await searchSite(query, { limit: 1, tag: tag === "tout" ? undefined : tag });
-            await updateSearchResult(interaction, buildResultMessage(results[0], query));
+            await updateSearchResult(interaction, await buildResultMessage(results[0], query));
         } catch (err) {
             console.error("Erreur recherche index JSON:", err);
             try {
