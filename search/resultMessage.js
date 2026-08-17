@@ -1,8 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { color } = require("../config/config.json");
-
-const SITE_URL = process.env.SITE_URL?.replace(/\/$/, "");
-const SITE_ICON = `${SITE_URL}/images/favicon_dorthos_secrets.png`;
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder } = require("discord.js");
 
 const NEW_SEARCH_BUTTON = () => new ButtonBuilder()
     .setCustomId("btn-recherche-nouvelle")
@@ -11,55 +7,78 @@ const NEW_SEARCH_BUTTON = () => new ButtonBuilder()
     .setEmoji("🔄");
 
 function getCategory(url) {
-    const isTool = new URL(url).pathname.startsWith("/tools/");
-    return isTool
-        ? { label: "🛠️ Outil", color: color.blue, action: "Ouvrir l'outil" }
-        : { label: "📖 Guide", color: color.orange, action: "Voir le guide" };
-}
-
-function createActionRow(...components) {
-    return new ActionRowBuilder().addComponents(...components);
+    return new URL(url).pathname.startsWith("/tools/")
+        ? { emoji: "🛠️" }
+        : { emoji: "📖" };
 }
 
 function formatTags(tags = []) {
-    return tags.length > 0 ? tags.map((tag) => `\`${tag}\``).join(" ") : "Aucun tag";
+    return tags.length > 0 ? tags.map((tag) => `[${tag}]`).join(" ") : null;
 }
 
 function buildResultMessage(best, query) {
     if (!best) {
-        const embed = new EmbedBuilder()
-            .setDescription(`Aucun résultat pour **"${query}"**.`)
-            .setColor(color.dark_grey);
+        const container = new ContainerBuilder()
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`Aucun résultat pour **"${query}"**.`),
+            )
+            .addActionRowComponents(
+                new ActionRowBuilder().addComponents(NEW_SEARCH_BUTTON()),
+            );
 
-        return { embeds: [embed], components: [createActionRow(NEW_SEARCH_BUTTON())] };
+        return { components: [container], flags: MessageFlags.IsComponentsV2 };
     }
 
     const category = getCategory(best.url);
-
-    const embed = new EmbedBuilder()
-        .setTitle(best.title)
-        .setURL(best.url)
-        .setDescription(best.excerpt)
-        .setColor(category.color)
-        .addFields(
-            { name: "Type", value: category.label, inline: true },
-            { name: "Tags", value: formatTags(best.tags), inline: true },
+    const titleSection = new SectionBuilder()
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`## [${best.title}](${best.url})`),
         )
-        .setFooter({ text: `Recherche : "${query}"` })
-        .setTimestamp();
+        .setButtonAccessory(
+            new ButtonBuilder()
+                .setCustomId("result-category-decoration")
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji(category.emoji)
+                .setDisabled(true),
+        );
 
-    if (best.image) embed.setThumbnail(best.image);
+    const container = new ContainerBuilder()
+        .addSectionComponents(titleSection);
 
-    const row = createActionRow(
-        new ButtonBuilder()
-            .setLabel(category.action)
-            .setStyle(ButtonStyle.Link)
-            .setURL(best.url)
-            .setEmoji("🔗"),
-        NEW_SEARCH_BUTTON()
-    );
+    if (best.image) {
+        container.addMediaGalleryComponents(
+            new MediaGalleryBuilder().addItems(
+                new MediaGalleryItemBuilder().setURL(best.image),
+            ),
+        );
+    }
 
-    return { embeds: [embed], components: [row] };
+    container.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large));
+
+    const formattedTags = formatTags(best.tags);
+    if (formattedTags) {
+        container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`\`\`\`ps\n${formattedTags}\`\`\``),
+        );
+    }
+
+    container
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(best.excerpt || "_Aucun extrait disponible._"),
+        )
+        .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large))
+        .addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setLabel("Voir le guide")
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(best.url)
+                    .setEmoji("🔗"),
+                NEW_SEARCH_BUTTON(),
+            ),
+        );
+
+    return { components: [container], flags: MessageFlags.IsComponentsV2 };
 }
 
 module.exports = { buildResultMessage };

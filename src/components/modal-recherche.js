@@ -1,10 +1,14 @@
+const { ContainerBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
 const { searchSite } = require("../../search/pagefind.js");
 const { buildResultMessage } = require("../../search/resultMessage.js");
 
 const SEARCH_ERROR_MESSAGE = {
-    content: "La recherche a échoué, réessaie dans quelques secondes.",
-    embeds: [],
-    components: [],
+    components: [
+        new ContainerBuilder().addTextDisplayComponents(
+            new TextDisplayBuilder().setContent("La recherche a échoué, réessaie dans quelques secondes."),
+        ),
+    ],
+    flags: MessageFlags.IsComponentsV2,
 };
 
 async function updateSearchResult(interaction, message) {
@@ -15,6 +19,12 @@ async function updateSearchResult(interaction, message) {
             if (error.code !== 10008) throw error;
             await interaction.followUp(message);
         }
+        return;
+    }
+
+    // Les anciens messages embed ne peuvent pas recevoir le flag Components V2 à l'édition.
+    if (!interaction.message.flags.has(MessageFlags.IsComponentsV2)) {
+        await interaction.followUp(message);
         return;
     }
 
@@ -39,7 +49,7 @@ module.exports = {
         if (updatesExistingMessage) {
             await interaction.deferUpdate();
         } else {
-            await interaction.deferReply();
+            await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
         }
 
         try {
