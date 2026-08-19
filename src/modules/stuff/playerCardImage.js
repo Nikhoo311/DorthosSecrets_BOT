@@ -16,6 +16,7 @@ const {
 const WIDTH = 460;
 const HEADER_HEIGHT = 50;
 const ROW_HEIGHT = 78;
+const FOOTER_HEIGHT = 26;
 const PADDING_X = 20;
 const CARD_RADIUS = 18;
 const AVATAR_RADIUS = 26;
@@ -24,8 +25,8 @@ function displayName(player) {
     return player.ingameName ?? player.discordUsername;
 }
 
-async function drawPlayerCardImage(player, avatarURL, title) {
-    const height = HEADER_HEIGHT + ROW_HEIGHT + PADDING_X / 2;
+async function drawPlayerCardImage(player, avatarURL, title, updatedAt) {
+    const height = HEADER_HEIGHT + ROW_HEIGHT + FOOTER_HEIGHT;
     const canvas = createCanvas(WIDTH * SCALE, height * SCALE);
     const ctx = canvas.getContext("2d");
     ctx.scale(SCALE, SCALE);
@@ -75,6 +76,12 @@ async function drawPlayerCardImage(player, avatarURL, title) {
     ctx.textAlign = "left";
 
     await drawAvatarCircle(ctx, avatarURL, avatarCenterX, rowCenter, AVATAR_RADIUS);
+
+    if (updatedAt) {
+        ctx.font = "12px sans-serif";
+        ctx.fillStyle = TEXT_SECONDARY;
+        ctx.fillText(`Mis à jour le ${updatedAt.toLocaleDateString("fr-FR")}`, PADDING_X, height - FOOTER_HEIGHT / 2);
+    }
 
     return canvas.toBuffer("image/png");
 }

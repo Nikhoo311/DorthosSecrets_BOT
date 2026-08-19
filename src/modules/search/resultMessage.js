@@ -8,9 +8,7 @@ const NEW_SEARCH_BUTTON = () => new ButtonBuilder()
     .setEmoji("🔄");
 
 function getCategory(url) {
-    return new URL(url).pathname.startsWith("/tools/")
-        ? { emoji: "🛠️" }
-        : { emoji: "📖" };
+    return new URL(url).pathname.startsWith("/tools/") ? { emoji: "🛠️" } : { emoji: "📖" };
 }
 
 async function buildResultMessage(best, query) {
