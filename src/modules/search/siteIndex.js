@@ -1,7 +1,7 @@
 const MiniSearch = require("minisearch");
 
 const SITE_URL = process.env.SITE_URL?.replace(/\/$/, "");
-const PAGES_INDEX_URL = process.env.PAGES_INDEX_URL || `${SITE_URL}/pages.json`;
+const PAGES_INDEX_URL = `${SITE_URL}/pages.json`;
 const SEARCH_TIMEOUT_MS = 8000;
 const TTL_MS = 5 * 60 * 1000;
 

@@ -1,21 +1,25 @@
 # Dorthos Secrets BOT
 
-Bot Discord de recherche pour le guide [Dorthos Secrets](https://dorthos-secrets.fr/). Il permet de retrouver rapidement un guide ou un outil depuis Discord, à partir de l’index JSON du site.
+Bot Discord pour rechercher les guides de [Dorthos Secrets](https://dorthos-secrets.fr/) et partager le Gear Score des membres d'une guilde.
 
 ## Fonctionnalités
 
-- Commandes slash `/recherche` et `/aide` pour ouvrir la recherche dans le guide.
-- Recherche optimisée : retrait des mots vides français et exclusion des pages sommaires.
-- Filtre dans la modal : toutes les catégories, stuff, argent, optimisation ou métier.
-- Embed Discord avec titre, extrait, catégorie, miniature éventuelle et lien direct.
-- Bouton **Nouvelle recherche** pour relancer une recherche sans créer un nouveau message.
-- Message de bienvenue configurable pour les nouveaux membres.
+- `/recherche`, `/aide` et `/help` : ouvrent une recherche dans les guides et outils Dorthos Secrets.
+- Recherche plein texte dans l'index public `pages.json`, avec filtres par catégorie (`Stuff`, `Argent`, `Optimisation`, `Métier`).
+- Résultat enrichi : image, tags, description et lien vers le guide ou l'outil.
+- `/gs modifier [utilisateur]` : ajoute ou met à jour le pseudo en jeu, l'AP, le DP et des détails optionnels.
+- `/gs voir [utilisateur]` : affiche la fiche stuff d'un membre.
+- `/gs classement` : affiche les 10 meilleurs Gear Scores enregistrés.
+- Message de bienvenue optionnel pour les nouveaux membres.
+
+Le Gear Score est calculé ainsi : `GS = AP + DP`.
 
 ## Prérequis
 
-- [Node.js](https://nodejs.org/) 18 ou plus récent.
-- Une application Discord et son bot.
-- Les permissions Discord nécessaires pour envoyer des messages, embeds et composants dans le salon ciblé.
+- Node.js 18 ou plus récent.
+- Une application Discord avec un bot et les permissions nécessaires pour envoyer des messages et utiliser les commandes d'application.
+- Un projet Firebase avec Firestore activé, car les commandes `/gs` enregistrent les données des joueurs dans Firestore.
+- L'intent **Server Members Intent** activé dans le portail Discord si le message de bienvenue est utilisé.
 
 ## Installation
 
@@ -25,54 +29,71 @@ cd dorthos-secrets-bot
 npm install
 ```
 
-Copiez ensuite la configuration d’exemple :
+Créez ensuite les fichiers de configuration :
 
-```bash
-copy config\examples\config.example.json config\config.json
+```powershell
+Copy-Item config/examples/config.example.json config/config.json
+Copy-Item .env.example .env
 ```
 
 Sous macOS ou Linux :
 
 ```bash
 cp config/examples/config.example.json config/config.json
+cp .env.example .env
 ```
 
 ## Configuration
 
 ### `config/config.json`
 
-Remplacez les valeurs suivantes :
+Renseignez l'identifiant de l'application Discord et celui du serveur de développement :
 
 ```json
 {
   "clientID": "APPLICATION_ID",
-  "serverID": "SERVER_ID"
+  "serverID": "SERVER_ID",
+  "officerRoleIds": ["ROLE_ID_OFFICIER"],
+  "color": {
+    "blue": "#00ADB5",
+    "orange": "#f38b23",
+    "dark_grey": "#393E46"
+  }
 }
 ```
 
-- `clientID` : identifiant de l’application Discord.
-- `serverID` : identifiant du serveur Discord, utilisé lorsque `DEV_MODE=true`.
+`officerRoleIds` est optionnel, mais nécessaire pour autoriser les officiers à modifier le stuff d'autres membres avec `/gs modifier utilisateur`. Sans rôle configuré, chacun peut uniquement modifier son propre stuff.
+
+Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilisées par les cartes `/gs`.
 
 ### `.env`
-
-Créez un fichier `.env` à la racine du projet :
 
 ```dotenv
 TOKEN=VOTRE_TOKEN_DISCORD
 DEV_MODE=true
-SITE_URL=https://dorthos-secrets.fr/
-PAGES_INDEX_URL=https://dorthos-secrets.fr/pages.json
+SITE_URL=https://dorthos-secrets.fr
 WELCOME_CHANNEL_ID=
+GOOGLE_APPLICATION_CREDENTIALS=C:\chemin\absolu\vers\firebase-service-account.json
 ```
 
-- `TOKEN` : token du bot Discord. Ne le partagez jamais et ne le versionnez pas.
-- `DEV_MODE=true` : enregistre la commande instantanément sur `serverID`.
-- `DEV_MODE=false` : enregistre la commande globalement ; Discord peut prendre jusqu’à une heure pour propager la modification.
-- `SITE_URL` : URL du site Dorthos Secrets.
-- `PAGES_INDEX_URL` : URL de l’index JSON des pages ; par défaut `${SITE_URL}/pages.json`.
-- `WELCOME_CHANNEL_ID` : identifiant optionnel du salon de bienvenue. Sans valeur, le bot utilise le salon système du serveur s’il est configuré.
+- `TOKEN` : token du bot Discord. Ne le partagez jamais.
+- `DEV_MODE=true` : enregistre immédiatement les commandes sur `serverID`. Toute autre valeur les enregistre globalement ; la propagation peut prendre jusqu'à une heure.
+- `SITE_URL` : adresse du site Dorthos Secrets. Le bot charge systématiquement `${SITE_URL}/pages.json`.
+- `WELCOME_CHANNEL_ID` : identifiant facultatif du salon de bienvenue. Si vide, le bot utilise le salon système du serveur lorsqu'il existe.
+- `GOOGLE_APPLICATION_CREDENTIALS` : chemin absolu vers le fichier JSON d'un compte de service Firebase disposant d'un accès à Firestore.
 
-> Activez aussi l’intent **Server Members Intent** dans le portail développeur Discord : il est nécessaire au message de bienvenue (`guildMemberAdd`).
+Ne versionnez ni `.env`, ni le fichier JSON Firebase. Les deux contiennent des secrets.
+
+> `PAGES_INDEX_URL` n'est plus une variable utilisée par le code. Pour changer la source de recherche, modifiez `SITE_URL` ou adaptez `src/modules/search/siteIndex.js`.
+
+## Préparer Firebase / Firestore
+
+1. Créez ou sélectionnez un projet Firebase.
+2. Activez **Cloud Firestore**.
+3. Dans les paramètres du projet, créez une clé privée de compte de service et téléchargez le JSON.
+4. Placez ce fichier hors du dépôt, puis indiquez son chemin absolu dans `GOOGLE_APPLICATION_CREDENTIALS`.
+
+Le bot lit et écrit dans la collection Firestore `players`. Chaque document est identifié par l'ID Discord du membre et contient notamment le pseudo en jeu, l'AP, le DP, le GS et la date de mise à jour.
 
 ## Démarrer le bot
 
@@ -80,47 +101,37 @@ WELCOME_CHANNEL_ID=
 npm run dev
 ```
 
-Le bot enregistre les commandes puis se connecte à Discord. Utilisez ensuite `/recherche` ou `/aide` :
+Au démarrage, le bot charge les commandes, les enregistre auprès de Discord puis se connecte. Utilisez ensuite `/recherche` ou `/gs`.
 
-```text
-/recherche
-```
-
-La modal permet de saisir le terme et de choisir le filtre de catégorie.
-
-## Structure du projet
+## Structure utile
 
 ```text
 src/
-├── bot.js                         # initialisation du client Discord
+├── bot.js                         # démarrage du client Discord
 ├── commands/
-│   └── recherche.js               # commande /recherche
+│   ├── recherche.js                # /recherche, /aide et /help
+│   └── gs.js                       # /gs modifier, voir et classement
 ├── components/
-│   ├── btn-recherche-nouvelle.js  # ouverture du modal
-│   └── modal-recherche.js         # recherche via formulaire + filtre
-├── events/
-│   ├── ready.js                   # confirmation de connexion
-│   ├── interactionCreate.js       # routage des interactions
-│   └── guildMemberAdd.js          # message de bienvenue
+│   ├── btn-recherche-nouvelle.js   # modal de recherche
+│   ├── modal-recherche.js          # exécution de la recherche
+│   └── modal-gs-modifier.js        # saisie et mise à jour du Gear Score
+├── events/                         # événements Discord et routage des interactions
 ├── functions/
-│   ├── handlers/                  # chargeurs automatiques
-│   └── utils/Logger.js            # logs console
+│   ├── handlers/                   # chargement automatique
+│   └── utils/firebase.js           # initialisation de Firestore
 └── modules/
-    ├── search/
-    │   ├── siteIndex.js           # recherche dans l’index JSON distant
-    │   └── resultMessage.js       # construction des embeds Discord
-    └── stuff/                     # gear/leaderboard (/gs)
-
-config/
-└── examples/config.example.json   # modèle de configuration
+    ├── search/                     # index, rendu du résultat et tags
+    └── stuff/                      # données joueurs et cartes Gear Score
 ```
 
 ## Dépannage
 
-- **La commande n’apparaît pas** : vérifiez `clientID`, `serverID`, `TOKEN` et `DEV_MODE`. En mode global, attendez la propagation Discord.
-- **La recherche échoue** : vérifiez `PAGES_INDEX_URL` et la disponibilité du site.
-- **Le message de bienvenue ne part pas** : activez l’intent membres dans le portail Discord, renseignez un salon valide ou configurez un salon système.
+- **Le bot ne démarre pas** : vérifiez `TOKEN` et `GOOGLE_APPLICATION_CREDENTIALS`. Firebase est chargé au démarrage, même si vous n'utilisez pas encore `/gs`.
+- **Les commandes n'apparaissent pas** : vérifiez `clientID`, `serverID` et `DEV_MODE`. En mode global, attendez la propagation Discord.
+- **La recherche échoue** : vérifiez que `${SITE_URL}/pages.json` est accessible et que son contenu est une liste de pages.
+- **Un officier ne peut pas modifier un membre** : ajoutez l'ID du rôle concerné dans `officerRoleIds` de `config/config.json`.
+- **Le message de bienvenue ne part pas** : activez l'intent membres, puis définissez `WELCOME_CHANNEL_ID` ou un salon système Discord.
 
 ## Licence
 
-Ce projet est déclaré sous licence MIT dans `package.json`.
+MIT.

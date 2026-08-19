@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { TOKEN, DB_URL } = process.env;
+const { TOKEN } = process.env;
 const { Client, Collection } = require('discord.js');
 const { readdirSync } = require("fs");
 
