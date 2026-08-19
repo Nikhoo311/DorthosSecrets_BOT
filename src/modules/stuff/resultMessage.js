@@ -1,5 +1,8 @@
 const {
     AttachmentBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ContainerBuilder,
     TextDisplayBuilder,
     MediaGalleryBuilder,
@@ -39,14 +42,13 @@ async function buildPlayerCard(player, targetUser, isSelf) {
 
     const avatarURL = targetUser.displayAvatarURL({ extension: "png", size: 128 });
     const title = isSelf ? "Mon stuff" : `Stuff de ${displayName(player)}`;
-    const image = await drawPlayerCardImage(player, avatarURL, title);
+    const image = await drawPlayerCardImage(player, avatarURL, title, player.updatedAt?.toDate?.());
     const fileName = `stuff-${targetUser.id}.png`;
     const files = [new AttachmentBuilder(image, { name: fileName })];
 
-    const updatedAt = player.updatedAt?.toDate?.();
     const extraLines = [];
     if (player.details) extraLines.push(player.details);
-    if (updatedAt) extraLines.push(`-# Mis à jour le ${updatedAt.toLocaleDateString("fr-FR")}`);
+    const link = player.details?.match(/https?:\/\/\S+/)?.[0];
 
     const container = new ContainerBuilder()
         .setAccentColor(ACCENT_PROFILE)
@@ -60,6 +62,14 @@ async function buildPlayerCard(player, targetUser, isSelf) {
 
     if (extraLines.length) {
         container.addTextDisplayComponents(new TextDisplayBuilder().setContent(extraLines.join("\n\n")));
+    }
+
+    if (link) {
+        container.addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setLabel("Ouvrir le lien").setStyle(ButtonStyle.Link).setURL(link),
+            ),
+        );
     }
 
     return { components: [container], files, flags: MessageFlags.IsComponentsV2 };
