@@ -3,15 +3,7 @@ const { LabelBuilder } = require("@discordjs/builders");
 const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { buildUpdatePreview } = require("../modules/messagesAuto/updatePreview.js");
-
-function colorOptions(currentColor) {
-    return Object.entries(config.color).map(([name, hex]) => ({
-        label: name.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
-        value: name,
-        description: hex,
-        default: hex === currentColor,
-    }));
-}
+const { buildColorOptions } = require("../functions/utils/colorOptions.js");
 
 function createModal(message) {
     const color = new StringSelectMenuBuilder()
@@ -20,7 +12,7 @@ function createModal(message) {
         .setMinValues(0)
         .setMaxValues(1)
         .setRequired(false)
-        .addOptions(colorOptions(message.accentColor));
+        .addOptions(buildColorOptions(config.color, message.accentColor));
     return new ModalBuilder()
         .setCustomId(`modal-message-auto-update-color:${message.id}`)
         .setTitle("Couleur du message")

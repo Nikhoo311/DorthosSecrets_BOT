@@ -20,21 +20,26 @@ function formatDuration(durationMs) {
 }
 
 async function showAutomaticMessageSelect(interaction, action) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
     const messages = [...interaction.client.messagesAuto.values()].slice(0, 25);
     if (!messages.length) {
+        return interaction.editReply({
+            components: [new ContainerBuilder().addTextDisplayComponents(
+                new TextDisplayBuilder().setContent("Aucun message automatique n'est enregistré."),
+            )],
+        });
         await interaction.reply({ content: "❌ Aucun message automatique n'est enregistré.", flags: MessageFlags.Ephemeral });
         return;
     }
 
-    const options = await Promise.all(messages.map(async (message) => {
-        const channel = interaction.client.channels.cache.get(message.channelId)
-            ?? await interaction.client.channels.fetch(message.channelId).catch(() => null);
+    const options = messages.map((message) => {
+        const channel = interaction.client.channels.cache.get(message.channelId);
         return {
             label: message.title.slice(0, 100),
             value: message.id,
             description: `${formatDuration(message.durationMs)} · Salon #${channel?.name ?? message.channelId}`.slice(0, 100),
         };
-    }));
+    });
 
     const select = new StringSelectMenuBuilder()
         .setCustomId(`select-message-auto:${action}`)
@@ -46,7 +51,7 @@ async function showAutomaticMessageSelect(interaction, action) {
             action === "delete" ? "## Supprimer un message automatique" : "## Modifier un message automatique",
         ))
         .addActionRowComponents(new ActionRowBuilder().addComponents(select));
-    await interaction.reply({ components: [container], flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
+    await interaction.editReply({ components: [container] });
 }
 
 module.exports = {

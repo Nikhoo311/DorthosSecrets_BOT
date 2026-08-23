@@ -4,13 +4,9 @@ const ms = require("ms");
 const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { createAutomaticMessage } = require("../modules/messagesAuto/messagesAuto.js");
+const { buildColorOptions } = require("../functions/utils/colorOptions.js");
 
 const MIN_DURATION_MS = 60 * 1000;
-const COLOR_OPTIONS = Object.entries(config.color).map(([name, hex]) => ({
-    label: name.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
-    value: name,
-    description: hex,
-}));
 
 function parseDuration(input) {
     const value = input.replace(",", ".").trim();
@@ -45,7 +41,7 @@ function createModal(channelId) {
         .setMinValues(0)
         .setMaxValues(1)
         .setRequired(false)
-        .addOptions(COLOR_OPTIONS);
+        .addOptions(buildColorOptions(config.color));
 
     return new ModalBuilder()
         .setCustomId(`modal-message-auto:${channelId}`)

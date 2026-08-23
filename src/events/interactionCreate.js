@@ -14,6 +14,7 @@ module.exports = {
                 
             } catch (error) {
                 console.error(error);
+                if (interaction.replied || interaction.deferred) return;
                 await interaction.reply({
                     content: ":x: ⚠️ Une erreur est survenue lors de l'exécution de la commande !",
                     flags: [MessageFlags.Ephemeral]
