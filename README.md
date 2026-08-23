@@ -10,6 +10,7 @@ Bot Discord pour rechercher les guides de [Dorthos Secrets](https://dorthos-secr
 - `/gs modifier [utilisateur]` : ajoute ou met à jour le pseudo en jeu, l'AP, le DP et des détails optionnels.
 - `/gs voir [utilisateur]` : affiche la fiche stuff d'un membre.
 - `/gs classement` : affiche les 10 meilleurs Gear Scores enregistrés.
+- `/message-auto creer [salon]` : réservé aux officiers, programme un message récurrent avec titre, description, image optionnelle et fréquence (`1d`, `12h`, `1w`...). Sans `salon`, il est envoyé dans le salon courant.
 - Message de bienvenue optionnel pour les nouveaux membres.
 
 Le Gear Score est calculé ainsi : `GS = AP + DP`.
@@ -94,6 +95,8 @@ Ne versionnez ni `.env`, ni le fichier JSON Firebase. Les deux contiennent des s
 4. Placez ce fichier hors du dépôt, puis indiquez son chemin absolu dans `GOOGLE_APPLICATION_CREDENTIALS`.
 
 Le bot lit et écrit dans la collection Firestore `players`. Chaque document est identifié par l'ID Discord du membre et contient notamment le pseudo en jeu, l'AP, le DP, le GS et la date de mise à jour.
+
+Les messages automatiques sont stockés dans la collection `messagesAuto`. Au démarrage, elle est chargée dans le cache `client.messagesAuto`, puis les envois arrivés à échéance sont vérifiés toutes les 30 secondes.
 
 ## Démarrer le bot
 

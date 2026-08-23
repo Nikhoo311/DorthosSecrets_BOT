@@ -8,6 +8,8 @@ client.commands = new Collection();
 client.buttons = new Collection();
 client.selectMenus = new Collection();
 client.modals = new Collection();
+client.messagesAuto = new Collection();
+client.pendingAutomaticMessageUpdates = new Collection();
 
 client.commandArray = []
 

@@ -23,7 +23,7 @@ module.exports = {
         else if (interaction.isButton()){
             const { buttons } = client;
             const { customId } = interaction;
-            const button = buttons.get(customId);
+            const button = buttons.get(customId) ?? buttons.get(customId.split(":")[0]);
 
             if (!button) return new Error("The is no code for this button!")
 
@@ -59,7 +59,7 @@ module.exports = {
         else if (interaction.isStringSelectMenu() || interaction.isUserSelectMenu()) {
             const { selectMenus } = client;
             const { customId } = interaction;
-            const menu = selectMenus.get(customId);
+            const menu = selectMenus.get(customId) ?? selectMenus.get(customId.split(":")[0]);
             if (!menu) return new Error("There is no code for this selectMenu");
 
             try {

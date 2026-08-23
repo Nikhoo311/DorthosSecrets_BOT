@@ -18,6 +18,7 @@ Le bot ne contient ni le site Dorthos Secrets ni son contenu. La recherche dépe
 | `/gs modifier [utilisateur]` | Ajoute ou modifie un stuff. Sans utilisateur, modifie son propre stuff. Modifier un autre membre est réservé aux officiers. |
 | `/gs voir [utilisateur]` | Affiche sa fiche stuff ou celle du membre demandé. |
 | `/gs classement` | Affiche les 10 meilleurs GS de la guilde. |
+| `/message-auto creer` | Réservée aux officiers ; programme un message récurrent dans le salon courant. |
 
 ## Cycle d'exécution
 
@@ -43,6 +44,12 @@ Démarrage
   → lecture Firestore
   → génération d'une carte PNG avec canvas
   → réponse Discord via Components V2
+
+/message-auto creer
+  → contrôle du rôle officier
+  → modal titre, description, image optionnelle et fréquence
+  → écriture dans Firestore `messagesAuto` et ajout au cache `client.messagesAuto`
+  → au démarrage, chargement du cache puis envoi des messages arrivés à échéance
 ```
 
 ## Arborescence

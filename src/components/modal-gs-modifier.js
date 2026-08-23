@@ -39,7 +39,7 @@ function createModal(target, existing) {
         .setMaxLength(players.DETAILS_MAX_LENGTH)
         .setRequired(false);
     if (existing?.details) detailsInput.setValue(existing.details);
-    const detailsLabel = new LabelBuilder().setLabel("Détails (optionnel)").setTextInputComponent(detailsInput);
+    const detailsLabel = new LabelBuilder().setLabel("Détails").setTextInputComponent(detailsInput);
 
     return modal.addLabelComponents(ingameNameLabel, apLabel, dpLabel, detailsLabel);
 }
