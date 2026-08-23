@@ -1,4 +1,4 @@
-const { ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
+const { ModalBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders");
 const { color, officerRoleIds } = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
@@ -47,7 +47,7 @@ module.exports = {
         }
 
         const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
-        if (!channel?.isTextBased() || typeof channel.send !== "function") {
+        if (!channel?.isTextBased()) {
             await interaction.reply({ content: "❌ Ce salon ne permet pas l'envoi de messages.", flags: MessageFlags.Ephemeral });
             return;
         }
@@ -57,7 +57,10 @@ module.exports = {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         try {
             await channel.send({
-                components: [buildAutomaticMessageContainer({ title, description, imageUrl, accentColor })],
+                components: [
+                    new TextDisplayBuilder().setContent("||@everyone||"),
+                    buildAutomaticMessageContainer({ title, description, imageUrl, accentColor }),
+                ],
                 flags: MessageFlags.IsComponentsV2,
             });
             await interaction.editReply("✅ Message envoyé.");
