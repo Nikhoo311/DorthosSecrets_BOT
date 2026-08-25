@@ -46,15 +46,15 @@ module.exports = {
             return;
         }
 
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
-        if (!channel?.isTextBased()) {
-            await interaction.reply({ content: "❌ Ce salon ne permet pas l'envoi de messages.", flags: MessageFlags.Ephemeral });
+        if (!channel?.isTextBased() || typeof channel.send !== "function") {
+            await interaction.editReply("❌ Ce salon ne permet pas l'envoi de messages.");
             return;
         }
 
         const imageUrl = interaction.fields.getUploadedFiles("image", false)?.first()?.url ?? null;
         const accentColor = color[colorName] ?? null;
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         try {
             await channel.send({
                 components: [
