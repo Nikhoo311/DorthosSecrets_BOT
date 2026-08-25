@@ -17,7 +17,7 @@ Le Gear Score est calculé ainsi : `GS = AP + DP`.
 
 ## Prérequis
 
-- Node.js 18 ou plus récent.
+- Node.js 22 ou plus récent.
 - Une application Discord avec un bot et les permissions nécessaires pour envoyer des messages et utiliser les commandes d'application.
 - Un projet Firebase avec Firestore activé, car les commandes `/gs` enregistrent les données des joueurs dans Firestore.
 - L'intent **Server Members Intent** activé dans le portail Discord si le message de bienvenue est utilisé.
@@ -84,8 +84,6 @@ GOOGLE_APPLICATION_CREDENTIALS=C:\chemin\absolu\vers\firebase-service-account.js
 - `GOOGLE_APPLICATION_CREDENTIALS` : chemin absolu vers le fichier JSON d'un compte de service Firebase disposant d'un accès à Firestore.
 
 Ne versionnez ni `.env`, ni le fichier JSON Firebase. Les deux contiennent des secrets.
-
-> `PAGES_INDEX_URL` n'est plus une variable utilisée par le code. Pour changer la source de recherche, modifiez `SITE_URL` ou adaptez `src/modules/search/siteIndex.js`.
 
 ## Préparer Firebase / Firestore
 
