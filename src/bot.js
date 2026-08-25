@@ -10,6 +10,7 @@ client.selectMenus = new Collection();
 client.modals = new Collection();
 client.messagesAuto = new Collection();
 client.pendingAutomaticMessageUpdates = new Collection();
+client.pendingAutomaticMessageCreations = new Collection();
 
 client.commandArray = []
 

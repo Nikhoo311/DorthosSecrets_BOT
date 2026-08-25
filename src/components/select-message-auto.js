@@ -20,16 +20,14 @@ function formatDuration(durationMs) {
 }
 
 async function showAutomaticMessageSelect(interaction, action) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2 });
     const messages = [...interaction.client.messagesAuto.values()].slice(0, 25);
     if (!messages.length) {
-        return interaction.editReply({
+        return await interaction.reply({
             components: [new ContainerBuilder().addTextDisplayComponents(
-                new TextDisplayBuilder().setContent("Aucun message automatique n'est enregistré."),
+                new TextDisplayBuilder({ content: "❌ Aucun message automatique n'est enregistré."}),
             )],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
         });
-        await interaction.reply({ content: "❌ Aucun message automatique n'est enregistré.", flags: MessageFlags.Ephemeral });
-        return;
     }
 
     const options = messages.map((message) => {
@@ -51,7 +49,7 @@ async function showAutomaticMessageSelect(interaction, action) {
             action === "delete" ? "## Supprimer un message automatique" : "## Modifier un message automatique",
         ))
         .addActionRowComponents(new ActionRowBuilder().addComponents(select));
-    await interaction.editReply({ components: [container] });
+    await interaction.reply({ components: [container], flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2] });
 }
 
 module.exports = {

@@ -1,4 +1,5 @@
 const {
+    AttachmentBuilder,
     ContainerBuilder,
     MediaGalleryBuilder,
     MediaGalleryItemBuilder,
@@ -9,6 +10,7 @@ const {
 } = require("discord.js");
 const { Timestamp } = require("firebase-admin/firestore");
 const { db } = require("../../functions/utils/firebase.js");
+const { createReducedGalleryImage } = require("../search/tagImage.js");
 
 const COLLECTION = "messagesAuto";
 const CHECK_INTERVAL_MS = 30 * 1000;
@@ -37,7 +39,7 @@ async function createAutomaticMessage(data) {
         ...data,
         enabled: true,
         createdAt: Timestamp.now(),
-        nextSendAt: Timestamp.fromMillis(Date.now() + data.durationMs),
+        nextSendAt: Timestamp.fromMillis(data.startAt ?? Date.now() + data.durationMs),
     });
     const message = { id: reference.id, ...(await reference.get()).data() };
     return message;
@@ -101,10 +103,19 @@ async function sendAutomaticMessage(client, message) {
         throw new Error(`Le salon ${message.channelId} est introuvable ou ne permet pas l'envoi de messages.`);
     }
 
-    await channel.send({
-        components: [buildAutomaticMessageContainer(message)],
-        flags: MessageFlags.IsComponentsV2,
-    });
+    const files = [];
+    let displayMessage = message;
+    if (message.imageUrl) {
+        try {
+            const buffer = await createReducedGalleryImage(message.imageUrl);
+            const fileName = "message-auto-image.png";
+            files.push(new AttachmentBuilder(buffer, { name: fileName }));
+            displayMessage = { ...message, imageUrl: `attachment://${fileName}` };
+        } catch (error) {
+            console.warn("Impossible de réduire l'image du message automatique:", error.message);
+        }
+    }
+    await channel.send({ components: [buildAutomaticMessageContainer(displayMessage)], files, flags: MessageFlags.IsComponentsV2 });
 }
 
 async function processAutomaticMessages(client) {

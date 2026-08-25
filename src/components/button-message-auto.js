@@ -4,6 +4,7 @@ const { color, officerRoleIds } = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { deleteAutomaticMessage, updateAutomaticMessage } = require("../modules/messagesAuto/messagesAuto.js");
 const { showAutomaticMessageUpdateColorModal } = require("./modal-message-auto-update-color.js");
+const { showAutomaticMessageContentModal } = require("./modal-message-auto-content.js");
 
 function response(text, accentColor) {
     const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(text));
@@ -22,6 +23,10 @@ module.exports = {
             const message = interaction.client.messagesAuto.get(messageId);
             if (!message) return interaction.update(response("Ce message n'existe plus."));
             return showAutomaticMessageUpdateColorModal(interaction, message);
+        }
+
+        if (action === "create-content" && messageId) {
+            return showAutomaticMessageContentModal(interaction, messageId);
         }
 
         if (action === "save" && messageId) {
