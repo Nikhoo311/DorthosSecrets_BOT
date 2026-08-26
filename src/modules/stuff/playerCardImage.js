@@ -36,7 +36,7 @@ async function drawPlayerCardImage(player, avatarURL, title, updatedAt) {
     ctx.fill();
 
     ctx.textBaseline = "middle";
-    ctx.font = "bold 20px sans-serif";
+    ctx.font = "bold 20px 'DejaVu Sans'";
     ctx.fillStyle = ACCENT_GOLD_STRONG;
     ctx.fillText(title, PADDING_X, HEADER_HEIGHT / 2 + 2);
 
@@ -52,7 +52,7 @@ async function drawPlayerCardImage(player, avatarURL, title, updatedAt) {
     const barWidth = 150;
     const statsX = avatarCenterX - AVATAR_RADIUS - 14;
 
-    ctx.font = "bold 20px sans-serif";
+    ctx.font = "bold 20px 'DejaVu Sans'";
     ctx.fillStyle = TEXT_PRIMARY;
     const name = truncate(ctx, displayName(player), barWidth + 50);
     ctx.fillText(name, nameX, rowTop + 26);
@@ -66,11 +66,11 @@ async function drawPlayerCardImage(player, avatarURL, title, updatedAt) {
     ctx.fill();
 
     ctx.textAlign = "right";
-    ctx.font = "bold 15px sans-serif";
+    ctx.font = "bold 15px 'DejaVu Sans'";
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.fillText(`AP ${player.ap}  ·  DP ${player.dp}`, statsX, rowTop + 26);
 
-    ctx.font = "bold 22px sans-serif";
+    ctx.font = "bold 22px 'DejaVu Sans'";
     ctx.fillStyle = ACCENT_GOLD_STRONG;
     ctx.fillText(`${player.gs} GS`, statsX, rowTop + 54);
     ctx.textAlign = "left";
@@ -78,7 +78,7 @@ async function drawPlayerCardImage(player, avatarURL, title, updatedAt) {
     await drawAvatarCircle(ctx, avatarURL, avatarCenterX, rowCenter, AVATAR_RADIUS);
 
     if (updatedAt) {
-        ctx.font = "12px sans-serif";
+        ctx.font = "bold 12px 'DejaVu Sans'";
         ctx.fillStyle = TEXT_SECONDARY;
         ctx.fillText(`Mis à jour le ${updatedAt.toLocaleDateString("fr-FR")}`, PADDING_X, height - FOOTER_HEIGHT / 2);
     }

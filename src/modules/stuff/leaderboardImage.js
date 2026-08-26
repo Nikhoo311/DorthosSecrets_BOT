@@ -39,7 +39,7 @@ async function drawLeaderboardImage(top) {
     ctx.fill();
 
     ctx.textBaseline = "middle";
-    ctx.font = "bold 22px sans-serif";
+    ctx.font = "bold 22px 'DejaVu Sans'";
     ctx.fillStyle = ACCENT_GOLD_STRONG;
     ctx.fillText("Stuff de la guilde", PADDING_X, HEADER_HEIGHT / 2 + 2);
 
@@ -59,11 +59,11 @@ async function drawLeaderboardImage(top) {
         ctx.fillStyle = index % 2 === 0 ? ROW_COLOR_EVEN : ROW_COLOR_ODD;
         ctx.fill();
 
-        ctx.font = "bold 20px sans-serif";
+        ctx.font = "bold 20px 'DejaVu Sans'";
         ctx.fillStyle = RANK_COLORS[rank] ?? DEFAULT_RANK_COLOR;
         ctx.fillText(`#${rank}`, PADDING_X + 10, rowCenter);
 
-        ctx.font = "bold 17px sans-serif";
+        ctx.font = "bold 17px 'DejaVu Sans'";
         ctx.fillStyle = TEXT_PRIMARY;
         const name = truncate(ctx, displayName(player), barWidth);
         ctx.fillText(name, nameX, rowTop + 22);
@@ -78,11 +78,11 @@ async function drawLeaderboardImage(top) {
         ctx.fill();
 
         ctx.textAlign = "right";
-        ctx.font = "bold 15px sans-serif";
+        ctx.font = "bold 15px 'DejaVu Sans'";
         ctx.fillStyle = TEXT_SECONDARY;
         ctx.fillText(`AP ${player.ap}  ·  DP ${player.dp}`, statsX, rowTop + 22);
 
-        ctx.font = "bold 21px sans-serif";
+        ctx.font = "bold 21px 'DejaVu Sans'";
         ctx.fillStyle = ACCENT_GOLD_STRONG;
         ctx.fillText(`${player.gs} GS`, statsX, rowTop + 48);
         ctx.textAlign = "left";

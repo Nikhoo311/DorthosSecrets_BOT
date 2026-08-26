@@ -30,7 +30,7 @@ function createTagsImage(tags = []) {
 
     const measureCanvas = createCanvas(1, 1);
     const measure = measureCanvas.getContext("2d");
-    const iconFont = "15px 'Segoe UI Emoji'";
+    const iconFont = "15px 'Noto Color Emoji'";
     const labelFont = "600 11px Arial";
     const gap = 8;
     const paddingX = 10;
