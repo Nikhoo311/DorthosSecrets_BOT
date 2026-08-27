@@ -5,6 +5,7 @@
     "officerRoleIds": ["OFFICER_ROLE_ID", "..."],
 
     "welcomeChannelId": "WELCOME_CHANNEL_ID",
+    "newMembeRoleId": "NEW_MEMBER_ROLE_ID",
 
     "color": {
         "blue":"#00ADB5",

@@ -80,7 +80,7 @@ async function drawWelcomeImage(member) {
     ctx.fillStyle = ACCENT_GOLD_STRONG;
     drawCenteredText(ctx, username, centerX, 368);
 
-    ctx.font = "bold 28px 'DejaVu Sans'";
+    ctx.font = "bold 28px 'Noto Color Emoji', 'Noto Emoji', 'DejaVu Sans'";
     ctx.fillStyle = TEXT_PRIMARY;
     drawCenteredText(ctx, `sur ${guildName} !`, centerX, 413);
 

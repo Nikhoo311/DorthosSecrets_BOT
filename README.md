@@ -56,6 +56,7 @@ Renseignez l'identifiant de l'application Discord et celui du serveur de dévelo
   "serverID": "SERVER_ID",
   "officerRoleIds": ["ROLE_ID_OFFICIER"],
   "welcomeChannelId": "WELCOME_CHANNEL_ID",
+  "newMembeRoleId": "NEW_MEMBER_ROLE_ID",
   "color": {
     "blue": "#00ADB5",
     "orange": "#f38b23",
@@ -67,6 +68,8 @@ Renseignez l'identifiant de l'application Discord et celui du serveur de dévelo
 `officerRoleIds` est optionnel, mais nécessaire pour autoriser les officiers à modifier le stuff d'autres membres avec `/gs modifier utilisateur`. Sans rôle configuré, chacun peut uniquement modifier son propre stuff.
 
 `welcomeChannelId` est facultatif. S'il est vide, le bot utilise le salon système du serveur lorsqu'il existe.
+
+`newMembeRoleId` est facultatif. S'il est renseigné, le rôle correspondant est ajouté automatiquement aux nouveaux membres. Le rôle du bot doit être placé au-dessus de ce rôle dans la hiérarchie Discord.
 
 Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilisées par les cartes `/gs`.
 
