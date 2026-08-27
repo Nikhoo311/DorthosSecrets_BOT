@@ -26,27 +26,22 @@ function drawCenteredText(ctx, text, centerX, y) {
 }
 
 function drawCenteredEmojiText(ctx, text, centerX, y, fontSize) {
-    const parts = [...new Intl.Segmenter("fr", { granularity: "grapheme" }).segment(text)]
-        .map(({ segment }) => ({
-            text: segment,
-            isEmoji: /\p{Extended_Pictographic}/u.test(segment),
-        }));
-
     const fontFor = (isEmoji) => isEmoji
         ? `${fontSize}px 'Noto Color Emoji', 'Noto Emoji'`
         : `bold ${fontSize}px 'DejaVu Sans'`;
-
-    const widths = parts.map((part) => {
-        ctx.font = fontFor(part.isEmoji);
-        return ctx.measureText(part.text).width;
+    const parts = [...new Intl.Segmenter("fr", { granularity: "grapheme" }).segment(text)]
+        .map(({ segment }) => [segment, /\p{Extended_Pictographic}/u.test(segment)]);
+    const widths = parts.map(([value, isEmoji]) => {
+        ctx.font = fontFor(isEmoji);
+        return ctx.measureText(value).width;
     });
     let x = centerX - widths.reduce((total, width) => total + width, 0) / 2;
 
-    for (let index = 0; index < parts.length; index++) {
-        ctx.font = fontFor(parts[index].isEmoji);
-        ctx.fillText(parts[index].text, x, y);
+    parts.forEach(([value, isEmoji], index) => {
+        ctx.font = fontFor(isEmoji);
+        ctx.fillText(value, x, y);
         x += widths[index];
-    }
+    });
 }
 
 async function drawWelcomeImage(member) {
