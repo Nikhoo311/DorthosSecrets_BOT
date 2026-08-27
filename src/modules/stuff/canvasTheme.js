@@ -37,7 +37,17 @@ function truncate(ctx, text, maxWidth) {
     return `${truncated}…`;
 }
 
-async function drawAvatarCircle(ctx, avatarURL, cx, cy, radius) {
+async function drawAvatarCircle(ctx, avatarURL, cx, cy, radius, backgroundColor = "rgba(0, 0, 0, 0.8)") {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = backgroundColor;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.95)";
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 6;
+    ctx.fill();
+    ctx.restore();
+
     ctx.save();
     try {
         if (!avatarURL) throw new Error("no avatar url");
@@ -46,7 +56,11 @@ async function drawAvatarCircle(ctx, avatarURL, cx, cy, radius) {
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(img, cx - radius, cy - radius, radius * 2, radius * 2);
+        const diameter = radius * 2;
+        const scale = Math.max(diameter / img.width, diameter / img.height);
+        const width = img.width * scale;
+        const height = img.height * scale;
+        ctx.drawImage(img, cx - width / 2, cy - height / 2, width, height);
     } catch {
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -55,11 +69,14 @@ async function drawAvatarCircle(ctx, avatarURL, cx, cy, radius) {
     }
     ctx.restore();
 
+    ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = TRACK_COLOR;
+    ctx.strokeStyle = TEXT_PRIMARY;
+    ctx.globalAlpha = 0.2;
     ctx.lineWidth = 2;
     ctx.stroke();
+    ctx.restore();
 }
 
 module.exports = {

@@ -1,22 +1,14 @@
-const { EmbedBuilder } = require("discord.js");
-const { color } = require("../../config/config.json");
+const { welcomeChannelId } = require("../../config/config.json");
+const { buildWelcomeMessage } = require("../modules/welcome/resultMessage.js");
 
 module.exports = {
     name: "guildMemberAdd",
     async execute(member) {
-        const configuredChannel = process.env.WELCOME_CHANNEL_ID;
-        const channel = (configuredChannel && member.guild.channels.cache.get(configuredChannel))
+        const channel = (welcomeChannelId && member.guild.channels.cache.get(welcomeChannelId))
             || member.guild.systemChannel;
 
         if (!channel?.isTextBased()) return;
 
-        const embed = new EmbedBuilder()
-            .setColor(color.blue)
-            .setAuthor({ name: member.guild.name, iconURL: member.guild.iconURL() ?? undefined })
-            .setDescription(`Bienvenue ${member} sur **${member.guild.name}** !\nUtilise \`/recherche\` pour explorer les guides Dorthos Secrets.`)
-            .setThumbnail(member.user.displayAvatarURL())
-            .setTimestamp();
-
-        await channel.send({ embeds: [embed] });
+        await channel.send(await buildWelcomeMessage(member));
     },
 };

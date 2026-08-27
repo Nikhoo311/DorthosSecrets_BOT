@@ -145,13 +145,12 @@ Les cartes `/gs` sont dessinées avec `SCALE = 3`, puis exportées en PNG : le d
 TOKEN=VOTRE_TOKEN_DISCORD
 DEV_MODE=true
 SITE_URL=https://dorthos-secrets.fr
-WELCOME_CHANNEL_ID=
 GOOGLE_APPLICATION_CREDENTIALS=C:\chemin\vers\firebase-service-account.json
 ```
 
 - `DEV_MODE=true` enregistre les commandes sur le serveur identifié par `serverID`; toute autre valeur effectue un enregistrement global.
-- `WELCOME_CHANNEL_ID` est facultatif. Si absent, le bot utilise le salon système du serveur lorsqu'il existe.
-- `config/config.json` doit contenir `clientID`, `serverID`, les couleurs `blue`, `orange`, `dark_grey`, et facultativement `officerRoleIds`.
+- `welcomeChannelId` dans `config/config.json` est facultatif. S'il est vide, le bot utilise le salon système du serveur lorsqu'il existe.
+- `config/config.json` doit contenir `clientID`, `serverID`, les couleurs `blue`, `orange`, `dark_grey`, et facultativement `officerRoleIds` et `welcomeChannelId`.
 
 Le guide d'installation et d'exploitation destiné aux utilisateurs est dans [README.md](README.md).
 

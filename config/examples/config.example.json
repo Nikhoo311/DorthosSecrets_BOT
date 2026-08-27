@@ -4,6 +4,8 @@
 
     "officerRoleIds": ["OFFICER_ROLE_ID", "..."],
 
+    "welcomeChannelId": "WELCOME_CHANNEL_ID",
+
     "color": {
         "blue":"#00ADB5",
         "pastel_dark_blue": "#056676",

@@ -55,6 +55,7 @@ Renseignez l'identifiant de l'application Discord et celui du serveur de dévelo
   "clientID": "APPLICATION_ID",
   "serverID": "SERVER_ID",
   "officerRoleIds": ["ROLE_ID_OFFICIER"],
+  "welcomeChannelId": "WELCOME_CHANNEL_ID",
   "color": {
     "blue": "#00ADB5",
     "orange": "#f38b23",
@@ -65,6 +66,8 @@ Renseignez l'identifiant de l'application Discord et celui du serveur de dévelo
 
 `officerRoleIds` est optionnel, mais nécessaire pour autoriser les officiers à modifier le stuff d'autres membres avec `/gs modifier utilisateur`. Sans rôle configuré, chacun peut uniquement modifier son propre stuff.
 
+`welcomeChannelId` est facultatif. S'il est vide, le bot utilise le salon système du serveur lorsqu'il existe.
+
 Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilisées par les cartes `/gs`.
 
 ### `.env`
@@ -73,14 +76,12 @@ Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilis
 TOKEN=VOTRE_TOKEN_DISCORD
 DEV_MODE=true
 SITE_URL=https://dorthos-secrets.fr
-WELCOME_CHANNEL_ID=
 GOOGLE_APPLICATION_CREDENTIALS=C:\chemin\absolu\vers\firebase-service-account.json
 ```
 
 - `TOKEN` : token du bot Discord. Ne le partagez jamais.
 - `DEV_MODE=true` : enregistre immédiatement les commandes sur `serverID`. Toute autre valeur les enregistre globalement ; la propagation peut prendre jusqu'à une heure.
 - `SITE_URL` : adresse du site Dorthos Secrets. Le bot charge systématiquement `${SITE_URL}/pages.json`.
-- `WELCOME_CHANNEL_ID` : identifiant facultatif du salon de bienvenue. Si vide, le bot utilise le salon système du serveur lorsqu'il existe.
 - `GOOGLE_APPLICATION_CREDENTIALS` : chemin absolu vers le fichier JSON d'un compte de service Firebase disposant d'un accès à Firestore.
 
 Ne versionnez ni `.env`, ni le fichier JSON Firebase. Les deux contiennent des secrets.
@@ -131,7 +132,7 @@ src/
 - **Les commandes n'apparaissent pas** : vérifiez `clientID`, `serverID` et `DEV_MODE`. En mode global, attendez la propagation Discord.
 - **La recherche échoue** : vérifiez que `${SITE_URL}/pages.json` est accessible et que son contenu est une liste de pages.
 - **Un officier ne peut pas modifier un membre** : ajoutez l'ID du rôle concerné dans `officerRoleIds` de `config/config.json`.
-- **Le message de bienvenue ne part pas** : activez l'intent membres, puis définissez `WELCOME_CHANNEL_ID` ou un salon système Discord.
+- **Le message de bienvenue ne part pas** : activez l'intent membres, puis définissez `welcomeChannelId` dans `config/config.json` ou un salon système Discord.
 
 ## Licence
 
