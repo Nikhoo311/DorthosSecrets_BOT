@@ -18,6 +18,7 @@ Le bot ne contient ni le site Dorthos Secrets ni son contenu. La recherche dépe
 | `/gs modifier [utilisateur]` | Ajoute ou modifie un stuff. Sans utilisateur, modifie son propre stuff. Modifier un autre membre est réservé aux officiers. |
 | `/gs voir [utilisateur]` | Affiche sa fiche stuff ou celle du membre demandé. |
 | `/gs classement` | Affiche les 10 meilleurs GS de la guilde. |
+| `/gs tous` | Affiche tous les GS enregistrés, triés par ordre décroissant. |
 | `/message-auto creer` | Réservée aux officiers ; programme un message récurrent dans le salon courant. |
 
 ## Cycle d'exécution

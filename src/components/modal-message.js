@@ -58,7 +58,6 @@ module.exports = {
         try {
             await channel.send({
                 components: [
-                    new TextDisplayBuilder().setContent("||@everyone||"),
                     buildAutomaticMessageContainer({ title, description, imageUrl, accentColor }),
                 ],
                 flags: MessageFlags.IsComponentsV2,

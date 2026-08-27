@@ -27,7 +27,23 @@ const data = new SlashCommandBuilder()
     )
     .addSubcommand((sub) =>
         sub.setName("classement").setDescription("Top 10 des meilleurs Gear Score de la guilde")
+    )
+    .addSubcommand((sub) =>
+        sub.setName("tous").setDescription("Affiche le Gear Score de tous les membres enregistrés")
     );
+
+async function withAvatars(playersList, client) {
+    return Promise.all(
+        playersList.map(async (player) => {
+            try {
+                const user = await client.users.fetch(player.discordId);
+                return { ...player, avatarURL: user.displayAvatarURL({ extension: "png", size: 128 }) };
+            } catch {
+                return player;
+            }
+        })
+    );
+}
 
 async function execute(interaction) {
     const sub = interaction.options.getSubcommand();
@@ -60,22 +76,15 @@ async function execute(interaction) {
     if (sub === "classement") {
         await interaction.deferReply();
         const top = await players.getTop10();
-        // On récupère l'avatar Discord de chacun pour l'afficher dans l'image
-        // du classement. Si un membre est injoignable (parti du serveur...),
-        // on garde ses stats sans avatar plutôt que de faire échouer tout le
-        // classement.
-        const topWithAvatars = await Promise.all(
-            top.map(async (player) => {
-                try {
-                    const user = await interaction.client.users.fetch(player.discordId);
-                    return { ...player, avatarURL: user.displayAvatarURL({ extension: "png", size: 128 }) };
-                } catch {
-                    return player;
-                }
-            })
-        );
-        await interaction.editReply(await buildLeaderboard(topWithAvatars));
+        const topWithAvatars = await withAvatars(top, interaction.client);
+        await interaction.editReply(await buildLeaderboard(topWithAvatars, 10));
         return;
+    }
+
+    if (sub === "tous") {
+        await interaction.deferReply();
+        const allPlayers = await players.getAllPlayers();
+        await interaction.editReply(await buildLeaderboard(await withAvatars(allPlayers, interaction.client)));
     }
 }
 

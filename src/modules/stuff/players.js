@@ -59,6 +59,11 @@ async function getTop10() {
     return snapshot.docs.map((doc) => doc.data());
 }
 
+async function getAllPlayers() {
+    const snapshot = await db.collection(PLAYERS_COLLECTION).orderBy("gs", "desc").get();
+    return snapshot.docs.map((doc) => doc.data());
+}
+
 function hasOfficierRole(member, officerRoleIds) {
     if (!Array.isArray(officerRoleIds) || officerRoleIds.length === 0) return false;
     return member.roles.cache.some((role) => officerRoleIds.includes(role.id));
@@ -68,6 +73,7 @@ module.exports = {
     getPlayer,
     upsertPlayer,
     getTop10,
+    getAllPlayers,
     hasOfficierRole,
     ValidationError,
     AP_MIN,

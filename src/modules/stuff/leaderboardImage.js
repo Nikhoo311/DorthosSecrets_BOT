@@ -11,25 +11,35 @@ const {
     RANK_COLORS,
     DEFAULT_RANK_COLOR,
     SCALE,
+    STUFF_FONT,
     roundedRect,
     truncate,
     drawAvatarCircle,
 } = require("./canvasTheme.js");
 
-const WIDTH = 460;
-const HEADER_HEIGHT = 56;
-const ROW_HEIGHT = 68;
-const ROW_GAP = 6;
-const PADDING_X = 20;
-const CARD_RADIUS = 18;
-const AVATAR_RADIUS = 22;
+const WIDTH = 1600;
+const TOP_ZOOM = 2.3;
+const TEXT_ZOOM = 1.3;
+const size = (value) => value * TOP_ZOOM;
+const fontSize = (value) => size(value) * TEXT_ZOOM;
+const HEADER_HEIGHT = size(56);
+const ROW_HEIGHT = size(68);
+const ROW_GAP = size(6);
+const PADDING = size(20);
+const COLUMN_GAP = size(16);
+const ROWS_PER_COLUMN = 5;
+const CARD_RADIUS = size(18);
+const AVATAR_RADIUS = size(22);
+const COLUMN_WIDTH = (WIDTH - PADDING * 2 - COLUMN_GAP) / 2;
 
 function displayName(player) {
     return player.ingameName ?? player.discordUsername;
 }
 
-async function drawLeaderboardImage(top) {
-    const height = HEADER_HEIGHT + top.length * (ROW_HEIGHT + ROW_GAP) + PADDING_X / 2;
+async function drawLeaderboardImage(players, topLabel) {
+    const displayedPlayers = players.slice(0, ROWS_PER_COLUMN * 2);
+    const rows = Math.min(displayedPlayers.length, ROWS_PER_COLUMN);
+    const height = HEADER_HEIGHT + rows * (ROW_HEIGHT + ROW_GAP) + PADDING / 2;
     const canvas = createCanvas(WIDTH * SCALE, height * SCALE);
     const ctx = canvas.getContext("2d");
     ctx.scale(SCALE, SCALE);
@@ -39,52 +49,54 @@ async function drawLeaderboardImage(top) {
     ctx.fill();
 
     ctx.textBaseline = "middle";
-    ctx.font = "bold 22px 'DejaVu Sans'";
+    ctx.font = `bold ${fontSize(22)}px '${STUFF_FONT}'`;
     ctx.fillStyle = ACCENT_GOLD_STRONG;
-    ctx.fillText("Stuff de la guilde", PADDING_X, HEADER_HEIGHT / 2 + 2);
+    const title = topLabel ? `Stuff de la guilde · Top ${topLabel}` : "Stuff de la guilde";
+    ctx.fillText(title, PADDING, HEADER_HEIGHT / 2 + 2);
 
-    const maxGs = Math.max(...top.map((player) => player.gs), 1);
-    const nameX = PADDING_X + 46;
-    const barWidth = 150;
-    const avatarCenterX = WIDTH - PADDING_X - AVATAR_RADIUS;
-    const statsX = avatarCenterX - AVATAR_RADIUS - 14;
+    const maxGs = Math.max(...displayedPlayers.map((player) => player.gs), 1);
+    const barWidth = size(128);
 
-    for (let index = 0; index < top.length; index++) {
-        const player = top[index];
-        const rowTop = HEADER_HEIGHT + index * (ROW_HEIGHT + ROW_GAP);
+    for (let index = 0; index < displayedPlayers.length; index++) {
+        const player = displayedPlayers[index];
+        const column = Math.floor(index / ROWS_PER_COLUMN);
+        const row = index % ROWS_PER_COLUMN;
+        const rowX = PADDING + column * (COLUMN_WIDTH + COLUMN_GAP);
+        const rowTop = HEADER_HEIGHT + row * (ROW_HEIGHT + ROW_GAP);
         const rowCenter = rowTop + ROW_HEIGHT / 2;
         const rank = index + 1;
+        const avatarCenterX = rowX + COLUMN_WIDTH - PADDING - AVATAR_RADIUS;
+        const statsX = avatarCenterX - AVATAR_RADIUS - size(14);
+        const nameX = rowX + size(52);
 
-        roundedRect(ctx, PADDING_X / 2, rowTop, WIDTH - PADDING_X, ROW_HEIGHT, 12);
+        roundedRect(ctx, rowX, rowTop, COLUMN_WIDTH, ROW_HEIGHT, size(12));
         ctx.fillStyle = index % 2 === 0 ? ROW_COLOR_EVEN : ROW_COLOR_ODD;
         ctx.fill();
 
-        ctx.font = "bold 20px 'DejaVu Sans'";
+        ctx.font = `bold ${fontSize(20)}px '${STUFF_FONT}'`;
         ctx.fillStyle = RANK_COLORS[rank] ?? DEFAULT_RANK_COLOR;
-        ctx.fillText(`#${rank}`, PADDING_X + 10, rowCenter);
+        ctx.fillText(`#${rank}`, rowX + size(10), rowCenter);
 
-        ctx.font = "bold 17px 'DejaVu Sans'";
+        ctx.font = `bold ${fontSize(17)}px '${STUFF_FONT}'`;
         ctx.fillStyle = TEXT_PRIMARY;
-        const name = truncate(ctx, displayName(player), barWidth);
-        ctx.fillText(name, nameX, rowTop + 22);
+        ctx.fillText(truncate(ctx, displayName(player), barWidth), nameX, rowTop + size(22));
 
-        const barY = rowTop + 42;
-        roundedRect(ctx, nameX, barY, barWidth, 7, 3.5);
+        const barY = rowTop + size(42);
+        roundedRect(ctx, nameX, barY, barWidth, size(7), size(3.5));
         ctx.fillStyle = TRACK_COLOR;
         ctx.fill();
-        const filledWidth = Math.max(8, (player.gs / maxGs) * barWidth);
-        roundedRect(ctx, nameX, barY, filledWidth, 7, 3.5);
+        const filledWidth = Math.max(size(8), (player.gs / maxGs) * barWidth);
+        roundedRect(ctx, nameX, barY, filledWidth, size(7), size(3.5));
         ctx.fillStyle = ACCENT_GOLD;
         ctx.fill();
 
         ctx.textAlign = "right";
-        ctx.font = "bold 15px 'DejaVu Sans'";
+        ctx.font = `bold ${fontSize(15)}px '${STUFF_FONT}'`;
         ctx.fillStyle = TEXT_SECONDARY;
-        ctx.fillText(`AP ${player.ap}  ·  DP ${player.dp}`, statsX, rowTop + 22);
-
-        ctx.font = "bold 21px 'DejaVu Sans'";
+        ctx.fillText(`AP ${player.ap} · DP ${player.dp}`, statsX, rowTop + size(22));
+        ctx.font = `bold ${fontSize(21)}px '${STUFF_FONT}'`;
         ctx.fillStyle = ACCENT_GOLD_STRONG;
-        ctx.fillText(`${player.gs} GS`, statsX, rowTop + 48);
+        ctx.fillText(`${player.gs} GS`, statsX, rowTop + size(48));
         ctx.textAlign = "left";
 
         await drawAvatarCircle(ctx, player.avatarURL, avatarCenterX, rowCenter, AVATAR_RADIUS);

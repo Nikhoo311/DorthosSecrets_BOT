@@ -10,6 +10,7 @@ Bot Discord pour rechercher les guides de [Dorthos Secrets](https://dorthos-secr
 - `/gs modifier [utilisateur]` : ajoute ou met à jour le pseudo en jeu, l'AP, le DP et des détails optionnels.
 - `/gs voir [utilisateur]` : affiche la fiche stuff d'un membre.
 - `/gs classement` : affiche les 10 meilleurs Gear Scores enregistrés.
+- `/gs tous` : affiche tous les Gear Scores enregistrés, triés par ordre décroissant.
 - `/message-auto creer [salon]` : réservé aux officiers, programme un message récurrent avec titre, description, image optionnelle et fréquence (`1d`, `12h`, `1w`...). Sans `salon`, il est envoyé dans le salon courant.
 - Message de bienvenue optionnel pour les nouveaux membres.
 

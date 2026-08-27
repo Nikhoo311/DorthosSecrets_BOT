@@ -75,12 +75,12 @@ async function buildPlayerCard(player, targetUser, isSelf) {
     return { components: [container], files, flags: MessageFlags.IsComponentsV2 };
 }
 
-async function buildLeaderboard(top) {
+async function buildLeaderboard(top, topLabel) {
     if (top.length === 0) {
         return toMessage(ACCENT_EMPTY, "Aucun stuff enregistré pour le moment.\n-# Sois le premier avec `/gs modifier` !");
     }
 
-    const image = await drawLeaderboardImage(top);
+    const image = await drawLeaderboardImage(top, topLabel);
     const files = [new AttachmentBuilder(image, { name: "classement-gs.png" })];
 
     const container = new ContainerBuilder()

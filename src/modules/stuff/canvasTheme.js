@@ -1,4 +1,8 @@
-const { loadImage } = require("@napi-rs/canvas");
+const path = require("path");
+const { loadImage, GlobalFonts } = require("@napi-rs/canvas");
+
+const STUFF_FONT = "Teko";
+GlobalFonts.registerFromPath(path.resolve(__dirname, "../../../fonts/Teko-Variable.ttf"), STUFF_FONT);
 
 const BG_COLOR = "#0e0d12"; // --background
 const ROW_COLOR_EVEN = "#17151d"; // --surface
@@ -9,7 +13,7 @@ const ACCENT_GOLD = "#dba85c"; // --accent-warm
 const ACCENT_GOLD_STRONG = "#eec98a"; // --accent-warm-strong
 const TRACK_COLOR = "#2a2732"; // --border
 
-const RANK_COLORS = { 1: ACCENT_GOLD_STRONG, 2: "#c7ccd1", 3: "#cd7f32" };
+const RANK_COLORS = { 1: ACCENT_GOLD, 2: "#c7ccd1", 3: "#cd7f32" };
 const DEFAULT_RANK_COLOR = "#8f8a99"; // --muted
 
 const SCALE = 3;
@@ -91,6 +95,7 @@ module.exports = {
     RANK_COLORS,
     DEFAULT_RANK_COLOR,
     SCALE,
+    STUFF_FONT,
     roundedRect,
     truncate,
     drawAvatarCircle,
