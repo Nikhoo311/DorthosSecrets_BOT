@@ -25,6 +25,30 @@ function drawCenteredText(ctx, text, centerX, y) {
     ctx.fillText(text, centerX - ctx.measureText(text).width / 2, y);
 }
 
+function drawCenteredEmojiText(ctx, text, centerX, y, fontSize) {
+    const parts = [...new Intl.Segmenter("fr", { granularity: "grapheme" }).segment(text)]
+        .map(({ segment }) => ({
+            text: segment,
+            isEmoji: /\p{Extended_Pictographic}/u.test(segment),
+        }));
+
+    const fontFor = (isEmoji) => isEmoji
+        ? `${fontSize}px 'Noto Color Emoji', 'Noto Emoji'`
+        : `bold ${fontSize}px 'DejaVu Sans'`;
+
+    const widths = parts.map((part) => {
+        ctx.font = fontFor(part.isEmoji);
+        return ctx.measureText(part.text).width;
+    });
+    let x = centerX - widths.reduce((total, width) => total + width, 0) / 2;
+
+    for (let index = 0; index < parts.length; index++) {
+        ctx.font = fontFor(parts[index].isEmoji);
+        ctx.fillText(parts[index].text, x, y);
+        x += widths[index];
+    }
+}
+
 async function drawWelcomeImage(member) {
     const canvas = createCanvas(WIDTH * SCALE, HEIGHT * SCALE);
     const ctx = canvas.getContext("2d");
@@ -80,9 +104,8 @@ async function drawWelcomeImage(member) {
     ctx.fillStyle = ACCENT_GOLD_STRONG;
     drawCenteredText(ctx, username, centerX, 368);
 
-    ctx.font = "bold 28px 'Noto Color Emoji', 'Noto Emoji', 'DejaVu Sans'";
     ctx.fillStyle = TEXT_PRIMARY;
-    drawCenteredText(ctx, `sur ${guildName} !`, centerX, 413);
+    drawCenteredEmojiText(ctx, `sur ${guildName} !`, centerX, 413, 28);
 
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
