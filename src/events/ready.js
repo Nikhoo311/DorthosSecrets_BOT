@@ -11,8 +11,6 @@ module.exports = {
             status: "online",
         });
         logger.clientStart(`${client.user.tag} est en ligne !`);
-        const guildNames = client.guilds.cache.map((guild) => guild.name);
-        logger.log(`Serveurs connectés (${guildNames.length}) : ${guildNames.join(", ") || "aucun"}`);
         await startAutomaticMessages(client);
     }
 }
