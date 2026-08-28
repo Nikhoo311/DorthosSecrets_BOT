@@ -57,7 +57,7 @@ module.exports = {
                 console.error(error);
             }
         }
-        else if (interaction.isStringSelectMenu() || interaction.isUserSelectMenu()) {
+        else if (interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isRoleSelectMenu()) {
             const { selectMenus } = client;
             const { customId } = interaction;
             const menu = selectMenus.get(customId) ?? selectMenus.get(customId.split(":")[0]);

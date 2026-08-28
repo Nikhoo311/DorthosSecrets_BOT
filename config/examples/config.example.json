@@ -6,7 +6,33 @@
 
     "welcomeChannelId": "WELCOME_CHANNEL_ID",
     "newMembeRoleId": "NEW_MEMBER_ROLE_ID",
-
+    
+    "dorthosSecretsRoleId": "DORTHOS_SECRETS_ROLE_ID",
+    "roleLevels": {
+        "categories": [
+            {
+                "name": "Nom de la catégorie",
+                "emoji": "💀",
+                "levels": {
+                    "debutant": {
+                        "name": "Nom role 1",
+                        "color": "#couleur_hex",
+                        "roleId": null
+                    },
+                    "confirme": {
+                        "name": "Nom role 2",
+                        "color": "#couleur_hex",
+                        "roleId": null
+                    },
+                    "expert": {
+                        "name": "Nom role 3",
+                        "color": "#couleur_hex",
+                        "roleId": null
+                    }
+                }
+            }
+        ]
+    },
     "color": {
         "blue":"#00ADB5",
         "pastel_dark_blue": "#056676",

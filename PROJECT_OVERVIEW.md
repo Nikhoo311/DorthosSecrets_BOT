@@ -20,6 +20,8 @@ Le bot ne contient ni le site Dorthos Secrets ni son contenu. La recherche dépe
 | `/gs classement` | Affiche les 10 meilleurs GS de la guilde. |
 | `/gs tous` | Affiche tous les GS enregistrés, triés par ordre décroissant. |
 | `/message-auto creer` | Réservée aux officiers ; programme un message récurrent dans le salon courant. |
+| `/roles créer` | Réservée au propriétaire du serveur ; crée les rôles de niveau configurés et persiste leurs IDs. |
+| `/roles nettoyer confirmer:true` | Réservée au propriétaire du serveur ; supprime les rôles situés sous `dorthosSecretsRoleId`. |
 
 ## Cycle d'exécution
 
@@ -45,6 +47,15 @@ Démarrage
   → lecture Firestore
   → génération d'une carte PNG avec canvas
   → réponse Discord via Components V2
+
+/roles créer
+  → contrôle que l'appelant est le propriétaire de la guilde
+  → création des rôles absents de `roleLevels.categories`
+  → écriture des `roleId` dans `config/config.json`
+
+/roles nettoyer confirmer:true
+  → lecture du rôle de référence `dorthosSecretsRoleId`
+  → suppression des rôles supprimables situés sous sa position
 
 /message-auto creer
   → contrôle du rôle officier

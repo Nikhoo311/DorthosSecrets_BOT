@@ -13,6 +13,8 @@ Bot Discord pour rechercher les guides de [Dorthos Secrets](https://dorthos-secr
 - `/gs tous` : affiche tous les Gear Scores enregistrés, triés par ordre décroissant.
 - `/message-auto creer [salon]` : réservé aux officiers, programme un message récurrent avec titre, description, image optionnelle et fréquence (`1d`, `12h`, `1w`...). Sans `salon`, il est envoyé dans le salon courant.
 - Message de bienvenue optionnel pour les nouveaux membres.
+- `/roles créer` : réservé au propriétaire du serveur, crée les rôles déclarés dans `roleLevels.categories` et enregistre leurs IDs dans la configuration.
+- `/roles nettoyer confirmer:true` : réservé au propriétaire du serveur, supprime les rôles placés sous le rôle configuré dans `dorthosSecretsRoleId`.
 
 Le Gear Score est calculé ainsi : `GS = AP + DP`.
 
@@ -73,6 +75,14 @@ Renseignez l'identifiant de l'application Discord et celui du serveur de dévelo
 `newMembeRoleId` est facultatif. S'il est renseigné, le rôle correspondant est ajouté automatiquement aux nouveaux membres. Le rôle du bot doit être placé au-dessus de ce rôle dans la hiérarchie Discord.
 
 Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilisées par les cartes `/gs`.
+
+### Rôles de niveau
+
+`roleLevels.categories` contient les catégories, leurs niveaux, couleurs, noms et `roleId`. La commande `/roles créer` crée les rôles absents puis enregistre leurs IDs dans `config/config.json`.
+
+`dorthosSecretsRoleId` doit contenir l'ID du rôle de référence avant d'utiliser `/roles nettoyer confirmer:true`. Cette commande est destructive : elle supprime les rôles supprimables placés sous ce rôle.
+
+Les deux commandes `/roles` sont réservées au propriétaire du serveur et requièrent la permission **Gérer les rôles** pour le bot.
 
 ### `.env`
 
