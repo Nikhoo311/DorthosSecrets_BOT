@@ -14,7 +14,7 @@ Bot Discord pour rechercher les guides de [Dorthos Secrets](https://dorthos-secr
 - `/message-auto creer [salon]` : réservé aux officiers, programme un message récurrent avec titre, description, image optionnelle et fréquence (`1d`, `12h`, `1w`...). Sans `salon`, il est envoyé dans le salon courant.
 - Message de bienvenue optionnel pour les nouveaux membres.
 - `/roles créer` : réservé au propriétaire du serveur, crée les rôles déclarés dans `roleLevels.categories` et enregistre leurs IDs dans la configuration.
-- `/roles nettoyer confirmer:true` : réservé au propriétaire du serveur, supprime les rôles placés sous le rôle configuré dans `dorthosSecretsRoleId`.
+- `/roles nettoyer confirmer:true` : réservé au propriétaire du serveur, supprime les rôles enregistrés dans `roleLevels.categories`.
 
 Le Gear Score est calculé ainsi : `GS = AP + DP`.
 
@@ -80,7 +80,7 @@ Conservez aussi les couleurs `blue`, `orange` et `dark_grey` : elles sont utilis
 
 `roleLevels.categories` contient les catégories, leurs niveaux, couleurs, noms et `roleId`. La commande `/roles créer` crée les rôles absents puis enregistre leurs IDs dans `config/config.json`.
 
-`dorthosSecretsRoleId` doit contenir l'ID du rôle de référence avant d'utiliser `/roles nettoyer confirmer:true`. Cette commande est destructive : elle supprime les rôles supprimables placés sous ce rôle.
+`/roles nettoyer confirmer:true` est destructive : elle supprime les rôles référencés par les `roleId` de `roleLevels.categories`, quel que soit leur rang dans la hiérarchie.
 
 Les deux commandes `/roles` sont réservées au propriétaire du serveur et requièrent la permission **Gérer les rôles** pour le bot.
 

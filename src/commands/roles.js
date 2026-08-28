@@ -74,16 +74,10 @@ async function clean(interaction) {
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     try {
-        const { deleted, skipped } = await roles.cleanRolesBelowDorthos(interaction.guild, interaction.user.tag);
+        const { deleted, skipped } = await roles.cleanConfiguredRoles(interaction.guild, interaction.user.tag);
         const skippedText = skipped ? ` **${skipped}** rôle(s) non supprimable(s) ont été ignoré(s).` : "";
         await interaction.editReply(`✅ Nettoyage terminé : **${deleted}** rôle(s) supprimé(s).${skippedText}`);
     } catch (error) {
-        if (error.message === "DORTHOS_ROLE_ID_MISSING") {
-            return interaction.editReply("❌ Renseigne d'abord `dorthosSecretsRoleId` dans `config/config.json`.");
-        }
-        if (error.message === "DORTHOS_ROLE_NOT_FOUND") {
-            return interaction.editReply("❌ Le rôle configuré dans `dorthosSecretsRoleId` est introuvable sur ce serveur.");
-        }
         console.error("Erreur durant le nettoyage des rôles:", error);
         await interaction.editReply("❌ Le nettoyage a échoué. Vérifie la hiérarchie du bot.");
     }

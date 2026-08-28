@@ -84,26 +84,28 @@ async function createRoles(guild, userTag) {
     return created;
 }
 
-async function cleanRolesBelowDorthos(guild, userTag) {
-    if (!config.dorthosSecretsRoleId) throw new Error("DORTHOS_ROLE_ID_MISSING");
-    const dorthosRole = await guild.roles.fetch(config.dorthosSecretsRoleId).catch(() => null);
-    if (!dorthosRole) throw new Error("DORTHOS_ROLE_NOT_FOUND");
-
-    const allRoles = await guild.roles.fetch();
-    const candidates = allRoles.filter((role) => role.id !== guild.id && role.position < dorthosRole.position && !role.managed && role.editable);
-    const deletedIds = new Set(candidates.keys());
+async function cleanConfiguredRoles(guild, userTag) {
+    const categories = getCategories();
     let deleted = 0;
-    for (const role of candidates.values()) {
-        await role.delete(`Nettoyage sous Dorthos Secrets par ${userTag}`);
-        deleted += 1;
-    }
-    for (const category of getCategories()) {
+    let skipped = 0;
+
+    for (const category of categories) {
         for (const level of Object.values(category.levels)) {
-            if (deletedIds.has(level.roleId)) level.roleId = null;
+            if (!level.roleId) continue;
+            const role = await guild.roles.fetch(level.roleId).catch(() => null);
+            if (!role || !role.editable) {
+                level.roleId = null;
+                skipped += 1;
+                continue;
+            }
+
+            await role.delete(`Nettoyage des rôles configurés par ${userTag}`);
+            level.roleId = null;
+            deleted += 1;
         }
     }
-    saveRoleIds(getCategories());
-    const skipped = [...allRoles.values()].filter((role) => role.id !== guild.id && role.position < dorthosRole.position && (!role.editable || role.managed)).length;
+
+    saveRoleIds(categories);
     return { deleted, skipped };
 }
 
@@ -152,7 +154,7 @@ async function assignCategoryRole(guild, userId, index, selectedRoleId) {
 
 module.exports = {
     assignCategoryRole,
-    cleanRolesBelowDorthos,
+    cleanConfiguredRoles,
     createRoles,
     getCategories,
     MAX_CATEGORY_ROLES,
