@@ -6,8 +6,7 @@
 
     "welcomeChannelId": "WELCOME_CHANNEL_ID",
     "newMembeRoleId": "NEW_MEMBER_ROLE_ID",
-    
-    "dorthosSecretsRoleId": "DORTHOS_SECRETS_ROLE_ID",
+
     "roleLevels": {
         "categories": [
             {

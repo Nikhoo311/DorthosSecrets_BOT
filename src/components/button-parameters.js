@@ -5,9 +5,9 @@ const { buildOfficersPanel, buildSettingsHome, buildWelcomePanel } = require("..
 module.exports = {
     data: { name: "button-parameters", type: "button", multi: "button-parameters" },
     async execute(interaction) {
-        // if (!interaction.guild || interaction.user.id !== interaction.guild.ownerId) {
-        //     return interaction.reply({ content: "❌ Seul le propriétaire du serveur peut modifier les paramètres.", flags: MessageFlags.Ephemeral });
-        // }
+        if (!interaction.guild || interaction.user.id !== interaction.guild.ownerId) {
+            return interaction.reply({ content: "❌ Seul le propriétaire du serveur peut modifier les paramètres.", flags: MessageFlags.Ephemeral });
+        }
 
         const [, action, category] = interaction.customId.split(":");
         if (action === "return") {

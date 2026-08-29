@@ -5,9 +5,9 @@ const { buildOfficersPanel, buildWelcomePanel } = require("../modules/configurat
 module.exports = {
     data: { name: "select-parameters", type: "selectMenu", multi: "select-parameters" },
     async execute(interaction) {
-        //if (!interaction.guild || interaction.user.id !== interaction.guild.ownerId) {
-        //     return interaction.reply({ content: "❌ Seul le propriétaire du serveur peut modifier les paramètres.", flags: MessageFlags.Ephemeral });
-        // }
+        if (!interaction.guild || interaction.user.id !== interaction.guild.ownerId) {
+            return interaction.reply({ content: "❌ Seul le propriétaire du serveur peut modifier les paramètres.", flags: MessageFlags.Ephemeral });
+        }
 
         const action = interaction.customId.split(":")[1];
         try {
