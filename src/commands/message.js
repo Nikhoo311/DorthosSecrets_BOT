@@ -1,6 +1,6 @@
 const { ChannelType, SlashCommandBuilder, MessageFlags } = require("discord.js");
-const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { showMessageModal } = require("../components/modal-message.js");
 
 module.exports = {
@@ -16,7 +16,8 @@ module.exports = {
             .setRequired(false),
         ),
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, config.officerRoleIds)) {
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
             await interaction.reply({ content: "❌ Seuls les officiers peuvent envoyer un message avec le bot.", flags: MessageFlags.Ephemeral });
             return;
         }

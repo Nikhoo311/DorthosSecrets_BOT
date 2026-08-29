@@ -1,7 +1,8 @@
 const { ModalBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
 const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders");
-const { color, officerRoleIds } = require("../../config/config.json");
+const { color } = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { buildAutomaticMessageContainer } = require("../modules/messagesAuto/messagesAuto.js");
 const { buildColorOptions } = require("../functions/utils/colorOptions.js");
 
@@ -33,7 +34,8 @@ module.exports = {
     data: { name: "modal-message", type: "modal", multi: "modal-message" },
     showMessageModal,
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, officerRoleIds)) {
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
             await interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
             return;
         }

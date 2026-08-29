@@ -2,6 +2,7 @@ const { ChannelSelectMenuBuilder, ChannelType, ModalBuilder, TextInputBuilder, T
 const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders");
 const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { MIN_DURATION_MS, parseDuration } = require("./modal-message-auto.js");
 const { buildUpdatePreview } = require("../modules/messagesAuto/updatePreview.js");
 
@@ -44,7 +45,8 @@ module.exports = {
     data: { name: "modal-message-auto-update", type: "modal", multi: "modal-message-auto-update" },
     showAutomaticMessageUpdateModal,
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, config.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
         const [, messageId] = interaction.customId.split(":");
         const current = interaction.client.messagesAuto.get(messageId);
         if (!current) return interaction.reply({ content: "❌ Ce message n'existe plus.", flags: MessageFlags.Ephemeral });

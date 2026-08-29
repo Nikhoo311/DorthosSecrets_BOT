@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, LabelBuilder, MessageFlags } = require("discord.js");
-const config = require("../../config/config.json");
 const players = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 
 function createModal(target, existing) {
     const modal = new ModalBuilder()
@@ -62,7 +62,8 @@ async function execute(interaction) {
     const [, targetId] = interaction.customId.split(":");
     const isSelf = targetId === interaction.user.id;
 
-    if (!isSelf && !players.hasOfficierRole(interaction.member, config.officerRoleIds)) {
+    const configuration = await getGuildConfiguration(interaction.guildId);
+    if (!isSelf && !players.hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
         await interaction.reply({
             content: "❌ Seuls les officiers peuvent modifier le stuff d'un autre membre.",
             flags: MessageFlags.Ephemeral,

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const config = require("../../config/config.json");
 const players = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { showGsModifierModal } = require("../components/modal-gs-modifier.js");
 const { buildPlayerCard, buildLeaderboard } = require("../modules/stuff/resultMessage.js");
 
@@ -52,7 +52,8 @@ async function execute(interaction) {
         const target = interaction.options.getUser("utilisateur") ?? interaction.user;
         const isSelf = target.id === interaction.user.id;
 
-        if (!isSelf && !players.hasOfficierRole(interaction.member, config.officerRoleIds)) {
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!isSelf && !players.hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
             await interaction.reply({
                 content: "❌ Seuls les officiers peuvent modifier le stuff d'un autre membre.",
                 flags: MessageFlags.Ephemeral,
