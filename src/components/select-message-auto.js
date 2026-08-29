@@ -7,8 +7,8 @@ const {
     StringSelectMenuBuilder,
     TextDisplayBuilder,
 } = require("discord.js");
-const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { buildAutomaticMessageContainer } = require("../modules/messagesAuto/messagesAuto.js");
 const { showAutomaticMessageUpdateModal } = require("./modal-message-auto-update.js");
 
@@ -56,7 +56,8 @@ module.exports = {
     data: { name: "select-message-auto", type: "selectMenu", multi: "select-message-auto" },
     showAutomaticMessageSelect,
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, config.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
         const [, action] = interaction.customId.split(":");
         const message = interaction.client.messagesAuto.get(interaction.values[0]);
         if (!message) return interaction.update({ components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent("Ce message n'existe plus."))] });

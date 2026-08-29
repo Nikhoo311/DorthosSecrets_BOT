@@ -1,3 +1,71 @@
-const { ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js"); const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders"); const config=require("../../config/config.json"); const {hasOfficierRole}=require("../modules/stuff/players.js"); const {createAutomaticMessage}=require("../modules/messagesAuto/messagesAuto.js");
-function modal(id){const t=new TextInputBuilder().setCustomId("title").setStyle(TextInputStyle.Short).setRequired(true),d=new TextInputBuilder().setCustomId("description").setStyle(TextInputStyle.Paragraph).setRequired(true),im=new FileUploadBuilder().setCustomId("image").setMinValues(0).setMaxValues(1).setRequired(false);return new ModalBuilder().setCustomId(`modal-message-auto-content:${id}`).setTitle("Contenu du message").addLabelComponents(new LabelBuilder().setLabel("Titre").setTextInputComponent(t),new LabelBuilder().setLabel("Description").setTextInputComponent(d),new LabelBuilder().setLabel("Image").setFileUploadComponent(im));}
-module.exports={data:{name:"modal-message-auto-content",type:"modal",multi:"modal-message-auto-content"},showAutomaticMessageContentModal:(i,id)=>i.showModal(modal(id)),async execute(i){if(!hasOfficierRole(i.member,config.officerRoleIds))return i.reply({content:"❌ Accès refusé.",flags:MessageFlags.Ephemeral});const[,id]=i.customId.split(":"),key=`${i.user.id}:${id}`,p=i.client.pendingAutomaticMessageCreations.get(key),title=i.fields.getTextInputValue("title").trim(),description=i.fields.getTextInputValue("description").trim();if(!p||!title||!description)return i.reply({content:"❌ Création expirée ou invalide.",flags:MessageFlags.Ephemeral});await i.deferReply({flags:MessageFlags.Ephemeral});const message=await createAutomaticMessage({guildId:i.guildId,...p,title,description,imageUrl:i.fields.getUploadedFiles("image",false)?.first()?.url??null,createdBy:i.user.id});i.client.messagesAuto.set(message.id,message);i.client.pendingAutomaticMessageCreations.delete(key);await i.editReply(`✅ Message créé. Premier envoi ${p.startAt?`<t:${Math.floor(p.startAt/1000)}:F>`:`dans ${p.durationInput}`}.`);}};
+const { MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
+const { createAutomaticMessage } = require("../modules/messagesAuto/messagesAuto.js");
+const { hasOfficierRole } = require("../modules/stuff/players.js");
+
+function buildModal(channelId) {
+    const title = new TextInputBuilder()
+        .setCustomId("title")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+    const description = new TextInputBuilder()
+        .setCustomId("description")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+    const image = new FileUploadBuilder()
+        .setCustomId("image")
+        .setMinValues(0)
+        .setMaxValues(1)
+        .setRequired(false);
+
+    return new ModalBuilder()
+        .setCustomId(`modal-message-auto-content:${channelId}`)
+        .setTitle("Contenu du message")
+        .addLabelComponents(
+            new LabelBuilder().setLabel("Titre").setTextInputComponent(title),
+            new LabelBuilder().setLabel("Description").setTextInputComponent(description),
+            new LabelBuilder().setLabel("Image").setFileUploadComponent(image),
+        );
+}
+
+module.exports = {
+    data: { name: "modal-message-auto-content", type: "modal", multi: "modal-message-auto-content" },
+    showAutomaticMessageContentModal: (interaction, channelId) => interaction.showModal(buildModal(channelId)),
+    async execute(interaction) {
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
+            return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
+        }
+
+        const [, channelId] = interaction.customId.split(":");
+        const key = `${interaction.user.id}:${channelId}`;
+        const pending = interaction.client.pendingAutomaticMessageCreations.get(key);
+        const title = interaction.fields.getTextInputValue("title").trim();
+        const description = interaction.fields.getTextInputValue("description").trim();
+
+        if (!pending || !title || !description) {
+            return interaction.reply({
+                content: "❌ Création expirée ou invalide.",
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        const message = await createAutomaticMessage({
+            guildId: interaction.guildId,
+            ...pending,
+            title,
+            description,
+            imageUrl: interaction.fields.getUploadedFiles("image", false)?.first()?.url ?? null,
+            createdBy: interaction.user.id,
+        });
+        interaction.client.messagesAuto.set(message.id, message);
+        interaction.client.pendingAutomaticMessageCreations.delete(key);
+
+        const firstSend = pending.startAt
+            ? `<t:${Math.floor(pending.startAt / 1000)}:F>`
+            : `dans ${pending.durationInput}`;
+        await interaction.editReply(`✅ Message créé. Premier envoi ${firstSend}.`);
+    },
+};

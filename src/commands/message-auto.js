@@ -1,6 +1,6 @@
 const { ChannelType, SlashCommandBuilder, MessageFlags } = require("discord.js");
-const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { showAutomaticMessageModal } = require("../components/modal-message-auto.js");
 const { showAutomaticMessageSelect } = require("../components/select-message-auto.js");
 
@@ -23,7 +23,8 @@ module.exports = {
         .addSubcommand((sub) => sub.setName("supprimer").setDescription("Supprime un message automatique"))
         .addSubcommand((sub) => sub.setName("modifier").setDescription("Modifie un message automatique")),
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, config.officerRoleIds)) {
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) {
             await interaction.reply({
                 content: "❌ Seuls les officiers peuvent créer des messages automatiques.",
                 flags: MessageFlags.Ephemeral,

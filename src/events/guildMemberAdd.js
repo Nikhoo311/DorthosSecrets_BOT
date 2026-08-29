@@ -1,10 +1,11 @@
-const { welcomeChannelId, newMembeRoleId } = require("../../config/config.json");
 const { buildWelcomeMessage } = require("../modules/welcome/resultMessage.js");
 const logger = require("../functions/utils/Logger.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 
 module.exports = {
     name: "guildMemberAdd",
     async execute(member) {
+        const { welcomeChannelId, newMembeRoleId } = await getGuildConfiguration(member.guild.id);
         if (newMembeRoleId) {
             try {
                 await member.roles.add(newMembeRoleId);

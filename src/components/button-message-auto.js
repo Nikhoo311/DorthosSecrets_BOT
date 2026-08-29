@@ -1,7 +1,8 @@
 const { ContainerBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
 const { Timestamp } = require("firebase-admin/firestore");
-const { color, officerRoleIds } = require("../../config/config.json");
+const { color } = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { deleteAutomaticMessage, updateAutomaticMessage } = require("../modules/messagesAuto/messagesAuto.js");
 const { showAutomaticMessageUpdateColorModal } = require("./modal-message-auto-update-color.js");
 const { showAutomaticMessageContentModal } = require("./modal-message-auto-content.js");
@@ -15,7 +16,8 @@ function response(text, accentColor) {
 module.exports = {
     data: { name: "button-message-auto", type: "button", multi: "button-message-auto" },
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
         const [, action, messageId] = interaction.customId.split(":");
         if (action === "cancel") return interaction.update(response("Suppression annulée."));
 

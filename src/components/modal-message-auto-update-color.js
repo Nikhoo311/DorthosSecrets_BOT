@@ -2,6 +2,7 @@ const { ModalBuilder, StringSelectMenuBuilder, MessageFlags } = require("discord
 const { LabelBuilder } = require("@discordjs/builders");
 const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
+const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { buildUpdatePreview } = require("../modules/messagesAuto/updatePreview.js");
 const { buildColorOptions } = require("../functions/utils/colorOptions.js");
 
@@ -29,7 +30,8 @@ module.exports = {
     data: { name: "modal-message-auto-update-color", type: "modal", multi: "modal-message-auto-update-color" },
     showAutomaticMessageUpdateColorModal,
     async execute(interaction) {
-        if (!hasOfficierRole(interaction.member, config.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
+        const configuration = await getGuildConfiguration(interaction.guildId);
+        if (!hasOfficierRole(interaction.member, configuration.officerRoleIds)) return interaction.reply({ content: "❌ Accès refusé.", flags: MessageFlags.Ephemeral });
         const [, messageId] = interaction.customId.split(":");
         const pendingKey = `${interaction.user.id}:${messageId}`;
         const pending = interaction.client.pendingAutomaticMessageUpdates.get(pendingKey);
