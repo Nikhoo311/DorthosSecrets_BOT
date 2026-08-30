@@ -41,7 +41,10 @@ module.exports = {
                     nextSendAt: Timestamp.fromMillis(Date.now() + pending.durationMs),
                 });
                 interaction.client.pendingAutomaticMessageUpdates.delete(pendingKey);
-                return interaction.update(response(`✅ Message automatique modifié. Prochain envoi dans ${pending.durationInput} dans <#${message.channelId}>.`, color.green));
+                const cleanupWarning = message.storageCleanupFailed
+                    ? "\n⚠️ L'ancienne image n'a pas pu être supprimée de la base de données."
+                    : "";
+                return interaction.update(response(`✅ Message automatique modifié. Prochain envoi dans ${pending.durationInput} dans <#${message.channelId}>.${cleanupWarning}`, color.green));
             } catch (error) {
                 console.error("Erreur modification message automatique:", error);
                 return interaction.update(response("❌ Impossible de modifier ce message."));
@@ -50,8 +53,11 @@ module.exports = {
 
         if (action !== "delete" || !messageId || !interaction.client.messagesAuto.has(messageId)) return interaction.update(response("Ce message n'existe plus."));
         try {
-            await deleteAutomaticMessage(interaction.client, messageId);
-            await interaction.update(response("✅ Message automatique supprimé.", color.green));
+            const result = await deleteAutomaticMessage(interaction.client, messageId);
+            const cleanupWarning = result.storageCleanupFailed
+                ? "\n⚠️ L'image associée n'a pas pu être supprimée de la base de données."
+                : "";
+            await interaction.update(response(`✅ Message automatique supprimé.${cleanupWarning}`, color.green));
         } catch (error) {
             console.error("Erreur suppression message automatique:", error);
             await interaction.update(response("❌ Impossible de supprimer ce message."));

@@ -9,7 +9,8 @@ const {
     TextDisplayBuilder,
 } = require("discord.js");
 const { Timestamp } = require("firebase-admin/firestore");
-const { db } = require("../../functions/utils/firebase.js");
+const { randomUUID } = require("crypto");
+const { db, storage } = require("../../functions/utils/firebase.js");
 const { createReducedGalleryImage } = require("../search/tagImage.js");
 
 const COLLECTION = "messagesAuto";
@@ -46,8 +47,12 @@ async function createAutomaticMessage(data) {
 }
 
 async function deleteAutomaticMessage(client, messageId) {
+    const current = client.messagesAuto.get(messageId)
+        ?? (await db.collection(COLLECTION).doc(messageId).get()).data();
     await db.collection(COLLECTION).doc(messageId).delete();
     client.messagesAuto.delete(messageId);
+    const storageCleanupSucceeded = await deleteStoredImage(current?.imagePath);
+    return { storageCleanupFailed: !storageCleanupSucceeded };
 }
 
 async function updateAutomaticMessage(client, messageId, updates) {
@@ -56,7 +61,21 @@ async function updateAutomaticMessage(client, messageId, updates) {
     const current = client.messagesAuto.get(messageId);
     const message = { ...current, ...data };
     client.messagesAuto.set(messageId, message);
-    return message;
+    const storageCleanupSucceeded = updates.imagePath && updates.imagePath !== current?.imagePath
+        ? await deleteStoredImage(current?.imagePath)
+        : true;
+    return { ...message, storageCleanupFailed: !storageCleanupSucceeded };
+}
+
+async function deleteStoredImage(imagePath) {
+    if (!imagePath) return true;
+    try {
+        await storage.bucket().file(imagePath).delete({ ignoreNotFound: true });
+        return true;
+    } catch (error) {
+        console.warn(`Impossible de supprimer l'image Storage ${imagePath}:`, error.message);
+        return false;
+    }
 }
 
 function isDue(message) {
@@ -105,7 +124,12 @@ async function sendAutomaticMessage(client, message) {
 
     const files = [];
     let displayMessage = message;
-    if (message.imageUrl) {
+    if (message.imagePath) {
+        const [buffer] = await storage.bucket().file(message.imagePath).download();
+        const fileName = message.imageName ?? "message-auto-image";
+        files.push(new AttachmentBuilder(buffer, { name: fileName }));
+        displayMessage = { ...message, imageUrl: `attachment://${fileName}` };
+    } else if (message.imageUrl) {
         try {
             const buffer = await createReducedGalleryImage(message.imageUrl);
             const fileName = "message-auto-image.png";
@@ -116,6 +140,22 @@ async function sendAutomaticMessage(client, message) {
         }
     }
     await channel.send({ components: [buildAutomaticMessageContainer(displayMessage)], files, flags: MessageFlags.IsComponentsV2 });
+}
+
+async function storeAutomaticMessageImage(imageUrl, guildId, contentType) {
+    if (!imageUrl) return { imagePath: null, imageName: null };
+    if (!process.env.FIREBASE_STORAGE_BUCKET) throw new Error("STORAGE_NOT_CONFIGURED");
+
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error(`Impossible de télécharger l'image (${response.status}).`);
+    const extension = contentType?.split("/")[1]?.replace(/[^a-z0-9]/gi, "") || "image";
+    const imageName = `message-auto-${randomUUID()}.${extension}`;
+    const imagePath = `messages-auto/${guildId}/${imageName}`;
+    await storage.bucket().file(imagePath).save(Buffer.from(await response.arrayBuffer()), {
+        resumable: false,
+        metadata: { contentType: contentType || response.headers.get("content-type") || "application/octet-stream" },
+    });
+    return { imagePath, imageName };
 }
 
 async function processAutomaticMessages(client) {
@@ -148,6 +188,7 @@ module.exports = {
     buildAutomaticMessageContainer,
     createAutomaticMessage,
     deleteAutomaticMessage,
+    storeAutomaticMessageImage,
     startAutomaticMessages,
     updateAutomaticMessage,
 };
