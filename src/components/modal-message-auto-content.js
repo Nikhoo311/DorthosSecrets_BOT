@@ -1,7 +1,7 @@
 const { MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const { FileUploadBuilder, LabelBuilder } = require("@discordjs/builders");
 const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
-const { createAutomaticMessage, storeAutomaticMessageImage } = require("../modules/messagesAuto/messagesAuto.js");
+const { createAutomaticMessage } = require("../modules/messagesAuto/messagesAuto.js");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 
 function buildModal(channelId) {
@@ -52,29 +52,21 @@ module.exports = {
         }
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        let storedImage = { imagePath: null, imageName: null };
+        const upload = interaction.fields.getUploadedFiles("image", false)?.first();
+        let message;
         try {
-            const upload = interaction.fields.getUploadedFiles("image", false)?.first();
-            storedImage = await storeAutomaticMessageImage(
-                upload?.url ?? null,
-                interaction.guildId,
-                upload?.contentType,
-            );
-        } catch (error) {
-            console.error("Erreur lors de l'enregistrement de l'image du message automatique:", error);
-            const content = error.message === "IMAGE_TOO_LARGE"
-                ? "❌ L'image est trop lourde après optimisation."
-                : "❌ Impossible d'enregistrer l'image du message automatique.";
-            return interaction.editReply(content);
-        }
-        const message = await createAutomaticMessage({
+            message = await createAutomaticMessage({
             guildId: interaction.guildId,
             ...pending,
             title,
             description,
-            ...storedImage,
+            imageUpload: upload ? { url: upload.url, contentType: upload.contentType } : null,
             createdBy: interaction.user.id,
-        });
+            });
+        } catch (error) {
+            console.error("Erreur lors de l'enregistrement de l'image du message automatique:", error);
+            return interaction.editReply("❌ Impossible d'enregistrer l'image du message automatique.");
+        }
         interaction.client.messagesAuto.set(message.id, message);
         interaction.client.pendingAutomaticMessageCreations.delete(key);
 

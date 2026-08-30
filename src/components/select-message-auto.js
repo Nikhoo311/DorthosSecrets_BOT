@@ -1,5 +1,6 @@
 const {
     ActionRowBuilder,
+    AttachmentBuilder,
     ButtonBuilder,
     ButtonStyle,
     ContainerBuilder,
@@ -7,6 +8,8 @@ const {
     StringSelectMenuBuilder,
     TextDisplayBuilder,
 } = require("discord.js");
+const { readFile } = require("fs/promises");
+const path = require("path");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { buildAutomaticMessageContainer } = require("../modules/messagesAuto/messagesAuto.js");
@@ -20,7 +23,9 @@ function formatDuration(durationMs) {
 }
 
 async function showAutomaticMessageSelect(interaction, action) {
-    const messages = [...interaction.client.messagesAuto.values()].slice(0, 25);
+    const messages = [...interaction.client.messagesAuto.values()]
+        .filter((message) => message.guildId === interaction.guildId)
+        .slice(0, 25);
     if (!messages.length) {
         return await interaction.reply({
             components: [new ContainerBuilder().addTextDisplayComponents(
@@ -64,12 +69,28 @@ module.exports = {
 
         if (action === "update") return showAutomaticMessageUpdateModal(interaction, message);
 
-        const preview = buildAutomaticMessageContainer(message)
+        const files = [];
+        let previewMessage = message;
+        if (message.imagePath) {
+            try {
+                const fileName = message.imageName ?? "message-auto-image";
+                files.push(new AttachmentBuilder(
+                    await readFile(path.resolve(__dirname, "../..", message.imagePath)),
+                    { name: fileName },
+                ));
+                previewMessage = { ...message, imageUrl: `attachment://${fileName}` };
+            } catch (error) {
+                console.warn("Impossible de charger l'image de l'aperçu de suppression:", error.message);
+                previewMessage = { ...message, imageUrl: null };
+            }
+        }
+
+        const preview = buildAutomaticMessageContainer(previewMessage)
             .addTextDisplayComponents(new TextDisplayBuilder().setContent("\n**Confirmer la suppression de ce message ?**"))
             .addActionRowComponents(new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`button-message-auto:delete:${message.id}`).setLabel("Oui, supprimer").setEmoji("🗑️").setStyle(ButtonStyle.Danger),
                 new ButtonBuilder().setCustomId("button-message-auto:cancel").setLabel("Non, annuler").setEmoji("❌").setStyle(ButtonStyle.Secondary),
             ));
-        await interaction.update({ components: [preview], flags: MessageFlags.IsComponentsV2 });
+        await interaction.update({ components: [preview], files, flags: MessageFlags.IsComponentsV2 });
     },
 };

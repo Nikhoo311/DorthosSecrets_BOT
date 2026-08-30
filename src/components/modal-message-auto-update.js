@@ -4,7 +4,6 @@ const config = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { MIN_DURATION_MS, parseDuration } = require("./modal-message-auto.js");
-const { storeAutomaticMessageImage } = require("../modules/messagesAuto/messagesAuto.js");
 const { buildUpdatePreview } = require("../modules/messagesAuto/updatePreview.js");
 
 function durationInputValue(durationMs) {
@@ -61,15 +60,6 @@ module.exports = {
 
         const selectedChannels = interaction.fields.getSelectedChannels("channel", false);
         const upload = interaction.fields.getUploadedFiles("image", false)?.first();
-        let storedImage = { imagePath: current.imagePath ?? null, imageName: current.imageName ?? null };
-        try {
-            if (upload) storedImage = await storeAutomaticMessageImage(upload.url, interaction.guildId, upload.contentType);
-        } catch (error) {
-            const content = error.message === "IMAGE_TOO_LARGE"
-                ? "❌ L'image est trop lourde après optimisation."
-                : "❌ Impossible d'enregistrer cette image.";
-            return interaction.reply({ content, flags: MessageFlags.Ephemeral });
-        }
         const pendingKey = `${interaction.user.id}:${messageId}`;
         interaction.client.pendingAutomaticMessageUpdates.set(pendingKey, {
             title,
@@ -77,13 +67,14 @@ module.exports = {
             durationMs,
             durationInput: interaction.fields.getTextInputValue("duration").trim(),
             channelId: selectedChannels?.first()?.id ?? current.channelId,
-            imageUrl: upload ? null : current.imageUrl,
-            ...storedImage,
+            guildId: interaction.guildId,
+            imageUpload: upload ? { url: upload.url, contentType: upload.contentType } : null,
+            imagePreviewUrl: upload?.url ?? null,
         });
         setTimeout(() => interaction.client.pendingAutomaticMessageUpdates.delete(pendingKey), 15 * 60 * 1000).unref();
         const pending = interaction.client.pendingAutomaticMessageUpdates.get(pendingKey);
         await interaction.reply({
-            components: [buildUpdatePreview({ ...current, ...pending, id: messageId }, "first")],
+            ...await buildUpdatePreview({ ...current, ...pending, id: messageId }, "first"),
             flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
     },
