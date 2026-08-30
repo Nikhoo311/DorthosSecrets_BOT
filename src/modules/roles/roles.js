@@ -1,5 +1,7 @@
 const {
     ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ContainerBuilder,
     MessageFlags,
     SeparatorBuilder,
@@ -58,7 +60,21 @@ function buildCategoryPanel(category, index) {
             `## ${category.emoji} ${category.name}\nChoisis le rôle qui correspond le mieux à ton niveau dans cette catégorie.\nTu ne peux conserver qu'un seul de ces rôles :\n${levels.map((level) => `- <@&${level.roleId}>`).join("\n")}`,
         ))
         .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small))
-        .addActionRowComponents(new ActionRowBuilder().addComponents(menu));
+        .addActionRowComponents(new ActionRowBuilder().addComponents(menu))
+        .addActionRowComponents(new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`button-role-category:remove:${index}`)
+                .setLabel("Retirer")
+                .setEmoji("🗑️")
+                .setStyle(ButtonStyle.Secondary),
+            ...(index === getCategories().length - 1
+                ? [new ButtonBuilder()
+                    .setCustomId("button-role-category:remove-all")
+                    .setLabel("Retirer tous")
+                    .setEmoji("🧹")
+                    .setStyle(ButtonStyle.Danger)]
+                : []),
+        ));
 }
 
 async function createRoles(guild, userTag) {
@@ -152,6 +168,18 @@ async function assignCategoryRole(guild, userId, index, selectedRoleId) {
     };
 }
 
+async function removeAllCategoryRoles(guild, userId) {
+    const ids = getCategories()
+        .flatMap((category) => Object.values(category.levels).map((level) => level.roleId))
+        .filter(Boolean);
+    const member = await guild.members.fetch(userId).catch(() => null);
+    if (!member) throw new Error("MEMBER_NOT_FOUND");
+
+    const toRemove = ids.filter((id) => member.roles.cache.has(id));
+    if (toRemove.length) await member.roles.remove(toRemove);
+    return toRemove.length;
+}
+
 module.exports = {
     assignCategoryRole,
     cleanConfiguredRoles,
@@ -159,4 +187,5 @@ module.exports = {
     getCategories,
     MAX_CATEGORY_ROLES,
     publishRolePanels,
+    removeAllCategoryRoles,
 };
