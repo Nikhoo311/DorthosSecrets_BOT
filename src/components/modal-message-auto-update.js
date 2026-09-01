@@ -59,6 +59,7 @@ module.exports = {
         }
 
         const selectedChannels = interaction.fields.getSelectedChannels("channel", false);
+        const upload = interaction.fields.getUploadedFiles("image", false)?.first();
         const pendingKey = `${interaction.user.id}:${messageId}`;
         interaction.client.pendingAutomaticMessageUpdates.set(pendingKey, {
             title,
@@ -66,12 +67,14 @@ module.exports = {
             durationMs,
             durationInput: interaction.fields.getTextInputValue("duration").trim(),
             channelId: selectedChannels?.first()?.id ?? current.channelId,
-            imageUrl: interaction.fields.getUploadedFiles("image", false)?.first()?.url ?? current.imageUrl,
+            guildId: interaction.guildId,
+            imageUpload: upload ? { url: upload.url, contentType: upload.contentType } : null,
+            imagePreviewUrl: upload?.url ?? null,
         });
         setTimeout(() => interaction.client.pendingAutomaticMessageUpdates.delete(pendingKey), 15 * 60 * 1000).unref();
         const pending = interaction.client.pendingAutomaticMessageUpdates.get(pendingKey);
         await interaction.reply({
-            components: [buildUpdatePreview({ ...current, ...pending, id: messageId }, "first")],
+            ...await buildUpdatePreview({ ...current, ...pending, id: messageId }, "first"),
             flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
     },

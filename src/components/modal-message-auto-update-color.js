@@ -42,8 +42,6 @@ module.exports = {
         const accentColor = config.color[colorName] ?? null;
         const updates = { ...pending, accentColor };
         interaction.client.pendingAutomaticMessageUpdates.set(pendingKey, updates);
-        await interaction.update({
-            components: [buildUpdatePreview({ ...current, ...updates, id: messageId }, "continue")],
-        });
+        await interaction.update(await buildUpdatePreview({ ...current, ...updates, id: messageId }, "continue"));
     },
 };

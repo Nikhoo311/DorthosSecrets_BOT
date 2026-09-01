@@ -52,14 +52,21 @@ module.exports = {
         }
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        const message = await createAutomaticMessage({
+        const upload = interaction.fields.getUploadedFiles("image", false)?.first();
+        let message;
+        try {
+            message = await createAutomaticMessage({
             guildId: interaction.guildId,
             ...pending,
             title,
             description,
-            imageUrl: interaction.fields.getUploadedFiles("image", false)?.first()?.url ?? null,
+            imageUpload: upload ? { url: upload.url, contentType: upload.contentType } : null,
             createdBy: interaction.user.id,
-        });
+            });
+        } catch (error) {
+            console.error("Erreur lors de l'enregistrement de l'image du message automatique:", error);
+            return interaction.editReply("❌ Impossible d'enregistrer l'image du message automatique.");
+        }
         interaction.client.messagesAuto.set(message.id, message);
         interaction.client.pendingAutomaticMessageCreations.delete(key);
 
