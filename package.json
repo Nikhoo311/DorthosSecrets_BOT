@@ -4,13 +4,16 @@
   "description": "",
   "main": "src/bot.js",
   "scripts": {
-    "dev": "node ."
+    "dev": "node .",
+    "migrate:players": "node scripts/migrate-players-to-supabase.js",
+    "migrate:config-messages": "node scripts/migrate-config-and-messages-to-supabase.js"
   },
   "author": "Nikho311#4940",
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^1.0.0",
     "@napi-rs/canvas": "^1.0.6",
+    "@supabase/supabase-js": "^2.114.0",
     "chalk": "^4.1.2",
     "dayjs": "^1.11.5",
     "discord-api-types": "^0.37.120",

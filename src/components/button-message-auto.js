@@ -1,5 +1,4 @@
 const { ContainerBuilder, MessageFlags, TextDisplayBuilder } = require("discord.js");
-const { Timestamp } = require("firebase-admin/firestore");
 const { color } = require("../../config/config.json");
 const { hasOfficierRole } = require("../modules/stuff/players.js");
 const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
@@ -38,7 +37,7 @@ module.exports = {
             try {
                 const message = await updateAutomaticMessage(interaction.client, messageId, {
                     ...pending,
-                    nextSendAt: Timestamp.fromMillis(Date.now() + pending.durationMs),
+                    nextSendAt: Date.now() + pending.durationMs,
                 });
                 interaction.client.pendingAutomaticMessageUpdates.delete(pendingKey);
                 const cleanupWarning = message.storageCleanupFailed

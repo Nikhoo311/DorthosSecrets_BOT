@@ -42,7 +42,10 @@ async function buildPlayerCard(player, targetUser, isSelf) {
 
     const avatarURL = targetUser.displayAvatarURL({ extension: "png", size: 128 });
     const title = isSelf ? "Mon stuff" : `Stuff de ${displayName(player)}`;
-    const image = await drawPlayerCardImage(player, avatarURL, title, player.updatedAt?.toDate?.());
+    // `updatedAt` est déjà une Date (mappée dans players.js). Avant la
+    // migration vers Supabase c'était un Timestamp Firestore, d'où l'ancien
+    // `.toDate()`.
+    const image = await drawPlayerCardImage(player, avatarURL, title, player.updatedAt);
     const fileName = `stuff-${targetUser.id}.png`;
     const files = [new AttachmentBuilder(image, { name: fileName })];
 

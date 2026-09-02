@@ -8,13 +8,13 @@ const {
     SeparatorSpacingSize,
     TextDisplayBuilder,
 } = require("discord.js");
-const { Timestamp } = require("firebase-admin/firestore");
 const { mkdir, readFile, unlink, writeFile } = require("fs/promises");
+const { randomUUID } = require("crypto");
 const path = require("path");
-const { db } = require("../../functions/utils/firebase.js");
+const { supabase } = require("../../functions/utils/supabase.js");
 const { createReducedGalleryImage } = require("../search/tagImage.js");
 
-const COLLECTION = "messagesAuto";
+const TABLE = "messages_auto";
 const CHECK_INTERVAL_MS = 30 * 1000;
 const IMAGES_DIRECTORY = path.resolve(__dirname, "../../../config/messages-auto");
 
@@ -23,59 +23,130 @@ function toColorInt(color) {
     return Number.isNaN(value) ? null : value;
 }
 
-function fromDocument(document) {
-    return { id: document.id, ...document.data() };
+// Postgres est en snake_case, le reste du bot en camelCase. `durationInput`
+// et `createdBy` (passés à la création/mise à jour) ne sont volontairement
+// PAS persistés : rien ne les relit jamais depuis un message stocké, seul le
+// `pending` en mémoire (Map du client) est consulté pour ces champs — voir
+// modal-message-auto-content.js et button-message-auto.js.
+function fromRow(row) {
+    return {
+        id: row.id,
+        guildId: row.guild_id,
+        channelId: row.channel_id,
+        title: row.title,
+        description: row.description,
+        accentColor: row.accent_color,
+        imageUrl: row.image_url,
+        imagePath: row.image_path,
+        imageName: row.image_name,
+        durationMs: row.duration_ms,
+        enabled: row.enabled,
+        // Chaînes ISO côté Postgres (Firestore renvoyait des Timestamp) —
+        // gardées telles quelles : `isDue`/`getNextSendAt` ci-dessous ne font
+        // plus appel à `.toMillis()`, contrairement à l'ancienne version.
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        nextSendAt: row.next_send_at,
+    };
+}
+
+function unwrap(operation, { data, error }) {
+    if (error) {
+        const wrapped = new Error(`[messagesAuto] ${operation} a échoué : ${error.message}`);
+        wrapped.cause = error;
+        throw wrapped;
+    }
+    return data;
 }
 
 async function loadAutomaticMessages(client) {
-    const snapshot = await db.collection(COLLECTION).get();
+    const rows = unwrap("loadAutomaticMessages", await supabase.from(TABLE).select("*").eq("enabled", true));
     client.messagesAuto.clear();
-    for (const document of snapshot.docs) {
-        const message = fromDocument(document);
-        if (message.enabled !== false) client.messagesAuto.set(message.id, message);
+    for (const row of rows ?? []) {
+        const message = fromRow(row);
+        client.messagesAuto.set(message.id, message);
     }
     return client.messagesAuto;
 }
 
 async function createAutomaticMessage(data) {
-    const reference = db.collection(COLLECTION).doc();
-    const { imageUpload, ...messageData } = data;
+    const { imageUpload, durationInput, createdBy, ...messageData } = data;
+
+    // L'id est généré ICI, avant tout téléchargement — comme Firestore le
+    // faisait avec `db.collection().doc()` (qui réserve un id sans écrire).
+    // Si le téléchargement de l'image échoue, on sort en erreur AVANT
+    // d'insérer quoi que ce soit : pas de ligne orpheline sans image.
+    const id = randomUUID();
     const storedImage = imageUpload
-        ? await storeAutomaticMessageImage(imageUpload.url, data.guildId, reference.id, imageUpload.contentType)
+        ? await storeAutomaticMessageImage(imageUpload.url, data.guildId, id, imageUpload.contentType)
         : { imagePath: null, imageName: null };
-    await reference.set({
-        ...messageData,
-        ...storedImage,
-        enabled: true,
-        createdAt: Timestamp.now(),
-        nextSendAt: Timestamp.fromMillis(data.startAt ?? Date.now() + data.durationMs),
-    });
-    const message = { id: reference.id, ...(await reference.get()).data() };
-    return message;
+
+    const inserted = unwrap(
+        "createAutomaticMessage",
+        await supabase
+            .from(TABLE)
+            .insert({
+                id,
+                guild_id: messageData.guildId,
+                channel_id: messageData.channelId,
+                title: messageData.title,
+                description: messageData.description,
+                accent_color: messageData.accentColor ?? null,
+                image_path: storedImage.imagePath,
+                image_name: storedImage.imageName,
+                duration_ms: messageData.durationMs,
+                enabled: true,
+                next_send_at: new Date(messageData.startAt ?? Date.now() + messageData.durationMs).toISOString(),
+            })
+            .select("*")
+            .single()
+    );
+
+    return fromRow(inserted);
 }
 
 async function deleteAutomaticMessage(client, messageId) {
-    const current = client.messagesAuto.get(messageId)
-        ?? (await db.collection(COLLECTION).doc(messageId).get()).data();
-    await db.collection(COLLECTION).doc(messageId).delete();
+    const current =
+        client.messagesAuto.get(messageId) ??
+        fromRow(unwrap("deleteAutomaticMessage (read)", await supabase.from(TABLE).select("*").eq("id", messageId).maybeSingle()) ?? {});
+    unwrap("deleteAutomaticMessage", await supabase.from(TABLE).delete().eq("id", messageId));
     client.messagesAuto.delete(messageId);
     const storageCleanupSucceeded = await deleteStoredImage(current?.imagePath);
     return { storageCleanupFailed: !storageCleanupSucceeded };
 }
 
 async function updateAutomaticMessage(client, messageId, updates) {
-    const { imageUpload, imagePreviewUrl, ...messageUpdates } = updates;
+    const { imageUpload, imagePreviewUrl, nextSendAt, ...messageUpdates } = updates;
+    const current = client.messagesAuto.get(messageId);
     const storedImage = imageUpload
         ? await storeAutomaticMessageImage(imageUpload.url, updates.guildId, messageId, imageUpload.contentType)
         : {};
-    const data = { ...messageUpdates, ...storedImage, updatedAt: Timestamp.now() };
-    await db.collection(COLLECTION).doc(messageId).update(data);
-    const current = client.messagesAuto.get(messageId);
-    const message = { ...current, ...data };
+
+    const row = {
+        ...(messageUpdates.title !== undefined && { title: messageUpdates.title }),
+        ...(messageUpdates.description !== undefined && { description: messageUpdates.description }),
+        ...(messageUpdates.accentColor !== undefined && { accent_color: messageUpdates.accentColor }),
+        ...(messageUpdates.channelId !== undefined && { channel_id: messageUpdates.channelId }),
+        ...(messageUpdates.durationMs !== undefined && { duration_ms: messageUpdates.durationMs }),
+        ...(storedImage.imagePath && { image_path: storedImage.imagePath, image_name: storedImage.imageName }),
+        // `nextSendAt` peut arriver soit en Date (bouton "save", voir
+        // button-message-auto.js), soit absent (l'édition ne touche pas la
+        // planification tant qu'on n'a pas cliqué "Enregistrer").
+        ...(nextSendAt && { next_send_at: new Date(nextSendAt).toISOString() }),
+        updated_at: new Date().toISOString(),
+    };
+
+    const updated = unwrap(
+        "updateAutomaticMessage",
+        await supabase.from(TABLE).update(row).eq("id", messageId).select("*").single()
+    );
+    const message = fromRow(updated);
     client.messagesAuto.set(messageId, message);
-    const storageCleanupSucceeded = storedImage.imagePath && storedImage.imagePath !== current?.imagePath
-        ? await deleteStoredImage(current?.imagePath)
-        : true;
+
+    const storageCleanupSucceeded =
+        storedImage.imagePath && storedImage.imagePath !== current?.imagePath
+            ? await deleteStoredImage(current?.imagePath)
+            : true;
     return { ...message, storageCleanupFailed: !storageCleanupSucceeded };
 }
 
@@ -92,13 +163,13 @@ async function deleteStoredImage(imagePath) {
 }
 
 function isDue(message) {
-    return message.nextSendAt?.toMillis?.() <= Date.now();
+    return new Date(message.nextSendAt).getTime() <= Date.now();
 }
 
 function getNextSendAt(message, now = Date.now()) {
-    let nextSendAtMs = message.nextSendAt.toMillis() + message.durationMs;
+    let nextSendAtMs = new Date(message.nextSendAt).getTime() + message.durationMs;
     while (nextSendAtMs <= now) nextSendAtMs += message.durationMs;
-    return Timestamp.fromMillis(nextSendAtMs);
+    return new Date(nextSendAtMs).toISOString();
 }
 
 function buildAutomaticMessageContainer(message) {
@@ -174,7 +245,10 @@ async function processAutomaticMessages(client) {
             await sendAutomaticMessage(client, message);
             console.log(`[${new Date().toLocaleString("fr-FR")}] Message automatique envoyé : ${message.title} (${message.id})`);
             const nextSendAt = getNextSendAt(message);
-            await db.collection(COLLECTION).doc(message.id).update({ nextSendAt });
+            unwrap(
+                "processAutomaticMessages",
+                await supabase.from(TABLE).update({ next_send_at: nextSendAt }).eq("id", message.id)
+            );
             client.messagesAuto.set(message.id, { ...message, nextSendAt });
         } catch (error) {
             console.error(`Erreur lors de l'envoi du message automatique ${message.id}:`, error);
