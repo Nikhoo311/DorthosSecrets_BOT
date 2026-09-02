@@ -4,9 +4,7 @@
   "description": "",
   "main": "src/bot.js",
   "scripts": {
-    "dev": "node .",
-    "migrate:players": "node scripts/migrate-players-to-supabase.js",
-    "migrate:config-messages": "node scripts/migrate-config-and-messages-to-supabase.js"
+    "dev": "node ."
   },
   "author": "Nikho311#4940",
   "license": "MIT",
@@ -19,7 +17,6 @@
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.27.0",
     "dotenv": "^16.0.2",
-    "firebase-admin": "^14.2.0",
     "minisearch": "^7.2.0",
     "ms": "^2.1.3"
   }

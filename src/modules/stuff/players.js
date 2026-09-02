@@ -1,8 +1,5 @@
 const { supabase } = require("../../functions/utils/supabase.js");
 
-// Table Postgres (Supabase) — voir supabase/sql/players.sql dans le dépôt du
-// site. Le bot écrit avec la clé service_role, donc hors RLS : il est la seule
-// source d'écriture des GS, le site ne fait que lire.
 const PLAYERS_TABLE = "players";
 
 const AP_MIN = 0;
@@ -32,9 +29,6 @@ function validateStats({ ingameName, ap, dp, details }) {
     }
 }
 
-// Postgres est en snake_case, le reste du bot en camelCase. Le mappage vit
-// uniquement dans ce fichier : les commandes, modales et images de rendu
-// continuent de recevoir exactement les mêmes objets qu'avant la migration.
 function fromRow(row) {
     if (!row) return null;
     return {
@@ -45,17 +39,11 @@ function fromRow(row) {
         dp: row.dp,
         gs: row.gs,
         details: row.details ?? "",
-        // Chaîne ISO côté Postgres (Firestore renvoyait un Timestamp) —
-        // convertie en Date pour rester utilisable telle quelle par les
-        // consommateurs.
         updatedAt: row.updated_at ? new Date(row.updated_at) : null,
         updatedBy: row.updated_by ?? null,
     };
 }
 
-// supabase-js ne lève pas d'exception : il renvoie { data, error }. On
-// transforme l'erreur en vraie exception pour que les try/catch existants
-// (commandes et modales) continuent de fonctionner à l'identique.
 function unwrap(operation, { data, error }) {
     if (error) {
         const wrapped = new Error(`[players] ${operation} a échoué : ${error.message}`);
@@ -76,10 +64,6 @@ async function getPlayer(discordId) {
 async function upsertPlayer(discordId, { discordUsername, ingameName, ap, dp, details = "" }, updatedByDiscordId) {
     validateStats({ ingameName, ap, dp, details });
 
-    // `gs` est une colonne générée (ap + dp) : l'écrire provoquerait une erreur
-    // Postgres. On la relit via .select() pour la renvoyer à l'appelant.
-    // `updated_at` est posé explicitement : le DEFAULT now() ne s'applique
-    // qu'à l'insertion, pas à la mise à jour.
     const row = {
         discord_id: discordId,
         discord_username: discordUsername,
@@ -99,7 +83,6 @@ async function upsertPlayer(discordId, { discordUsername, ingameName, ap, dp, de
     return fromRow(data);
 }
 
-// Classement décroissant, commun à /gs classement (top 10) et /gs tous.
 async function listByGs(operation, limit) {
     let query = supabase.from(PLAYERS_TABLE).select("*").order("gs", { ascending: false });
     if (limit) query = query.limit(limit);
@@ -112,9 +95,6 @@ async function getTop10() {
     return listByGs("getTop10", 10);
 }
 
-// Sans limite explicite, Supabase plafonne la réponse à 1000 lignes (réglable
-// dans les paramètres d'API du projet) — largement au-dessus de la taille
-// d'une guilde, mais à garder en tête si ça devait changer.
 async function getAllPlayers() {
     return listByGs("getAllPlayers", null);
 }

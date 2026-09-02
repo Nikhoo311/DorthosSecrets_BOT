@@ -23,11 +23,6 @@ function toColorInt(color) {
     return Number.isNaN(value) ? null : value;
 }
 
-// Postgres est en snake_case, le reste du bot en camelCase. `durationInput`
-// et `createdBy` (passés à la création/mise à jour) ne sont volontairement
-// PAS persistés : rien ne les relit jamais depuis un message stocké, seul le
-// `pending` en mémoire (Map du client) est consulté pour ces champs — voir
-// modal-message-auto-content.js et button-message-auto.js.
 function fromRow(row) {
     return {
         id: row.id,
@@ -41,9 +36,6 @@ function fromRow(row) {
         imageName: row.image_name,
         durationMs: row.duration_ms,
         enabled: row.enabled,
-        // Chaînes ISO côté Postgres (Firestore renvoyait des Timestamp) —
-        // gardées telles quelles : `isDue`/`getNextSendAt` ci-dessous ne font
-        // plus appel à `.toMillis()`, contrairement à l'ancienne version.
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         nextSendAt: row.next_send_at,
@@ -72,10 +64,6 @@ async function loadAutomaticMessages(client) {
 async function createAutomaticMessage(data) {
     const { imageUpload, durationInput, createdBy, ...messageData } = data;
 
-    // L'id est généré ICI, avant tout téléchargement — comme Firestore le
-    // faisait avec `db.collection().doc()` (qui réserve un id sans écrire).
-    // Si le téléchargement de l'image échoue, on sort en erreur AVANT
-    // d'insérer quoi que ce soit : pas de ligne orpheline sans image.
     const id = randomUUID();
     const storedImage = imageUpload
         ? await storeAutomaticMessageImage(imageUpload.url, data.guildId, id, imageUpload.contentType)
@@ -129,9 +117,6 @@ async function updateAutomaticMessage(client, messageId, updates) {
         ...(messageUpdates.channelId !== undefined && { channel_id: messageUpdates.channelId }),
         ...(messageUpdates.durationMs !== undefined && { duration_ms: messageUpdates.durationMs }),
         ...(storedImage.imagePath && { image_path: storedImage.imagePath, image_name: storedImage.imageName }),
-        // `nextSendAt` peut arriver soit en Date (bouton "save", voir
-        // button-message-auto.js), soit absent (l'édition ne touche pas la
-        // planification tant qu'on n'a pas cliqué "Enregistrer").
         ...(nextSendAt && { next_send_at: new Date(nextSendAt).toISOString() }),
         updated_at: new Date().toISOString(),
     };

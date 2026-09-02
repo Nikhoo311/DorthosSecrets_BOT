@@ -30,9 +30,6 @@ function normalize(configuration, guildId) {
     };
 }
 
-// Postgres est en snake_case (et orthographié correctement : new_member_role_id).
-// Le champ externe reste `newMembeRoleId` (typo historique) pour ne rien
-// casser côté appelants — voir panel.js, select-parameters-category.js, etc.
 function fromRow(row) {
     return {
         guildId: row.guild_id,
@@ -68,8 +65,6 @@ async function getGuildConfiguration(guildId) {
     );
     if (existing) return normalize(fromRow(existing), guildId);
 
-    // Aucune ligne : première utilisation sur ce serveur, on initialise avec
-    // les valeurs par défaut (mêmes que Firestore : `set` inconditionnel).
     const configuration = defaultConfiguration(guildId);
     unwrap(
         "getGuildConfiguration (init)",
