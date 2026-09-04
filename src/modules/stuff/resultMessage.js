@@ -78,12 +78,15 @@ async function buildPlayerCard(player, targetUser, isSelf) {
     return { components: [container], files, flags: MessageFlags.IsComponentsV2 };
 }
 
-async function buildLeaderboard(top, topLabel) {
+async function buildLeaderboard(top, topLabel, page = 1, perPage = 10, showAll = false, userId = null) {
     if (top.length === 0) {
         return toMessage(ACCENT_EMPTY, "Aucun stuff enregistré pour le moment.\n-# Sois le premier avec `/gs modifier` !");
     }
 
-    const image = await drawLeaderboardImage(top, topLabel);
+    const totalPages = Math.ceil(top.length / perPage);
+    const actualPage = showAll ? 1 : Math.min(page, totalPages);
+
+    const image = await drawLeaderboardImage(top, topLabel, actualPage, perPage, showAll);
     const files = [new AttachmentBuilder(image, { name: "classement-gs.png" })];
 
     const container = new ContainerBuilder()
@@ -95,6 +98,37 @@ async function buildLeaderboard(top, topLabel) {
                     .setDescription("Stuff de la guilde")
             )
         );
+
+    // Ajouter les boutons de pagination si ce n'est pas le mode "tous"
+    if (!showAll && totalPages > 1 && userId) {
+        const row = new ActionRowBuilder();
+
+        const prevButton = new ButtonBuilder()
+            .setCustomId(`gs_pagination:prev:${userId}:${actualPage}:${perPage}`)
+            .setLabel("◀")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(actualPage <= 1);
+
+        const pageButton = new ButtonBuilder()
+            .setCustomId(`gs_pagination:page:${userId}:${actualPage}:${totalPages}`)
+            .setLabel(`Page ${actualPage} sur ${totalPages}`)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true);
+
+        const nextButton = new ButtonBuilder()
+            .setCustomId(`gs_pagination:next:${userId}:${actualPage}:${perPage}`)
+            .setLabel("▶")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(actualPage >= totalPages);
+
+        const showAllButton = new ButtonBuilder()
+            .setCustomId(`gs_pagination:showall:${userId}`)
+            .setLabel("Afficher entièrement")
+            .setStyle(ButtonStyle.Primary);
+
+        row.addComponents(prevButton, pageButton, nextButton, showAllButton);
+        container.addActionRowComponents(row);
+    }
 
     return { components: [container], files, flags: MessageFlags.IsComponentsV2 };
 }

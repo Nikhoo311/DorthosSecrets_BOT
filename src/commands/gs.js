@@ -78,14 +78,14 @@ async function execute(interaction) {
         await interaction.deferReply();
         const top = await players.getTop10();
         const topWithAvatars = await withAvatars(top, interaction.client);
-        await interaction.editReply(await buildLeaderboard(topWithAvatars, 10));
+        await interaction.editReply(await buildLeaderboard(topWithAvatars, 10, 1, 10, false, interaction.user.id));
         return;
     }
 
     if (sub === "tous") {
         await interaction.deferReply();
         const allPlayers = await players.getAllPlayers();
-        await interaction.editReply(await buildLeaderboard(await withAvatars(allPlayers, interaction.client)));
+        await interaction.editReply(await buildLeaderboard(await withAvatars(allPlayers, interaction.client), null, 1, 10, false, interaction.user.id));
     }
 }
 

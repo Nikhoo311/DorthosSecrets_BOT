@@ -36,10 +36,23 @@ function displayName(player) {
     return player.ingameName ?? player.discordUsername;
 }
 
-async function drawLeaderboardImage(players, topLabel) {
-    const displayedPlayers = players.slice(0, ROWS_PER_COLUMN * 2);
-    const rows = Math.min(displayedPlayers.length, ROWS_PER_COLUMN);
-    const height = HEADER_HEIGHT + rows * (ROW_HEIGHT + ROW_GAP) + PADDING / 2;
+async function drawLeaderboardImage(players, topLabel, page = 1, perPage = 10, showAll = false) {
+    const totalPlayers = players.length;
+    
+    // Déterminer les joueurs à afficher
+    let displayedPlayers;
+    if (showAll) {
+        displayedPlayers = players;
+    } else {
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+        displayedPlayers = players.slice(startIndex, endIndex);
+    }
+
+    // Hauteur : fixe pour pagination, variable pour "Afficher entièrement"
+    const rowsForHeight = showAll ? Math.ceil(displayedPlayers.length / 2) : Math.ceil(perPage / 2);
+    const height = HEADER_HEIGHT + rowsForHeight * (ROW_HEIGHT + ROW_GAP) + PADDING / 2;
+
     const canvas = createCanvas(WIDTH * SCALE, height * SCALE);
     const ctx = canvas.getContext("2d");
     ctx.scale(SCALE, SCALE);
@@ -54,17 +67,21 @@ async function drawLeaderboardImage(players, topLabel) {
     const title = topLabel ? `Stuff de la guilde · Top ${topLabel}` : "Stuff de la guilde";
     ctx.fillText(title, PADDING, HEADER_HEIGHT / 2 + 2);
 
-    const maxGs = Math.max(...displayedPlayers.map((player) => player.gs), 1);
+    const maxGs = Math.max(...players.map((player) => player.gs), 1);
     const barWidth = size(128);
 
     for (let index = 0; index < displayedPlayers.length; index++) {
         const player = displayedPlayers[index];
-        const column = Math.floor(index / ROWS_PER_COLUMN);
-        const row = index % ROWS_PER_COLUMN;
+        const globalIndex = showAll ? index : (page - 1) * perPage + index;
+        
+        // Format 2 colonnes : 1/2, 3/4, 5/6...
+        const column = index % 2;
+        const row = Math.floor(index / 2);
+        
         const rowX = PADDING + column * (COLUMN_WIDTH + COLUMN_GAP);
         const rowTop = HEADER_HEIGHT + row * (ROW_HEIGHT + ROW_GAP);
         const rowCenter = rowTop + ROW_HEIGHT / 2;
-        const rank = index + 1;
+        const rank = globalIndex + 1;
         const avatarCenterX = rowX + COLUMN_WIDTH - PADDING - AVATAR_RADIUS;
         const statsX = avatarCenterX - AVATAR_RADIUS - size(14);
         const nameX = rowX + size(52);
