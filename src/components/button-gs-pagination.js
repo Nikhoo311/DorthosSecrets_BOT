@@ -1,4 +1,4 @@
-const { MessageFlags } = require("discord.js");
+const { MessageFlags, ContainerBuilder, TextDisplayBuilder } = require("discord.js");
 const players = require("../modules/stuff/players.js");
 const { buildLeaderboard } = require("../modules/stuff/resultMessage.js");
 
@@ -33,10 +33,20 @@ module.exports = {
         if (interaction.user.id !== userId) {
             await interaction.reply({
                 content: "❌ Seul l'auteur de la commande peut utiliser ces boutons.",
-                flags: MessageFlags.Ephemeral,
+                flags: [MessageFlags.Ephemeral],
             });
             return;
         }
+
+        await interaction.deferUpdate();
+
+        const loadingContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder({ content: "⏳ Chargement en cours... Cela peut prendre quelques secondes." }));
+        
+        await interaction.editReply({
+            components: [loadingContainer],
+            flags: [MessageFlags.IsComponentsV2],
+        });
 
         const allPlayers = await players.getAllPlayers();
         const playersWithAvatars = await withAvatars(allPlayers, interaction.client);
@@ -58,12 +68,12 @@ module.exports = {
         }
 
         try {
-            await interaction.update(await buildLeaderboard(playersWithAvatars, null, newPage, 10, showAll, userId));
+            await interaction.editReply(await buildLeaderboard(playersWithAvatars, null, newPage, 10, showAll, userId));
         } catch (error) {
             if (error.code === 10062) {
-                await interaction.reply({
+                await interaction.followUp({
                     content: "⚠️ L'interaction a expiré. Relance la commande `/gs tous` pour voir le classement complet.",
-                    flags: MessageFlags.Ephemeral,
+                    flags: [MessageFlags.Ephemeral],
                 }).catch(() => {});
             } else {
                 console.error("Erreur lors de la mise à jour:", error);
