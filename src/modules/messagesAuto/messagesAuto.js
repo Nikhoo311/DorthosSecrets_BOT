@@ -13,15 +13,11 @@ const { randomUUID } = require("crypto");
 const path = require("path");
 const { supabase } = require("../../functions/utils/supabase.js");
 const { createReducedGalleryImage } = require("../search/tagImage.js");
+const { toColorInt } = require("../../functions/utils/toColorInt.js");
 
 const TABLE = "messages_auto";
 const CHECK_INTERVAL_MS = 30 * 1000;
 const IMAGES_DIRECTORY = path.resolve(__dirname, "../../../config/messages-auto");
-
-function toColorInt(color) {
-    const value = parseInt(color.replace("#", ""), 16);
-    return Number.isNaN(value) ? null : value;
-}
 
 function fromRow(row) {
     return {

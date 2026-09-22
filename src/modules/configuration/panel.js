@@ -1,10 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, ContainerBuilder, RoleSelectMenuBuilder, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, TextDisplayBuilder } = require("discord.js");
 const { color } = require("../../../config/config.json");
-
-function toColorInt(color) {
-    const value = parseInt(color.replace("#", ""), 16);
-    return Number.isNaN(value) ? null : value;
-}
+const { toColorInt } = require("../../functions/utils/toColorInt.js");
 
 function separator() {
     return new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);

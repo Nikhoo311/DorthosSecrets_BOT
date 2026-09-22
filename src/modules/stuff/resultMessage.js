@@ -12,10 +12,7 @@ const {
 const config = require("../../../config/config.json");
 const { drawLeaderboardImage } = require("./leaderboardImage.js");
 const { drawPlayerCardImage } = require("./playerCardImage.js");
-
-function toColorInt(hex) {
-    return parseInt(hex.replace("#", ""), 16);
-}
+const { toColorInt } = require("../../functions/utils/toColorInt.js");
 
 const ACCENT_PROFILE = toColorInt(config.color.blue);
 const ACCENT_LEADERBOARD = toColorInt(config.color.orange);
