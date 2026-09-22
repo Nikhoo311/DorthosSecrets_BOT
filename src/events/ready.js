@@ -2,6 +2,7 @@ const logger = require("../functions/utils/Logger");
 const { ActivityType } = require("discord.js");
 const { startAutomaticMessages } = require("../modules/messagesAuto/messagesAuto.js");
 const { startGuildMembersCacheSync } = require("../modules/stuff/guildMembersCache.js");
+const { sendPatchNotesIfVersionChanged } = require("../modules/patchNotes/patchNotes.js");
 
 module.exports = {
     name: "clientReady",
@@ -14,5 +15,6 @@ module.exports = {
         logger.clientStart(`${client.user.tag} est en ligne !`);
         await startAutomaticMessages(client);
         await startGuildMembersCacheSync(client);
+        await sendPatchNotesIfVersionChanged(client);
     }
 }

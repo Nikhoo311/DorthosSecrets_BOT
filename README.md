@@ -23,6 +23,47 @@ Le Gear Score est calculé ainsi : `GS = AP + DP`.
 
 En arrière-plan, le bot synchronise toutes les 10 minutes le pseudo serveur, l'avatar et le rôle principal de chaque membre vers Supabase. C'est ce qui permet à l'annuaire de guilde du site (`dorthos-secrets.fr/guilde`) d'afficher une vraie photo et un vrai pseudo pour tous les membres, même ceux qui ne se sont jamais connectés au site.
 
+## Système de Patch Notes
+
+Le bot dispose d'un système automatique de patch notes qui informe les propriétaires de serveur des nouvelles versions lors du démarrage.
+
+### Fonctionnement
+
+- Au démarrage, le bot vérifie si le fichier `PATCH_NOTES.md` existe à la racine du projet.
+- Si le fichier existe, il compare la version actuelle (depuis `package.json`) avec la dernière version envoyée (stockée dans `config/lastPatchNoteVersion.json`).
+- Si la version a changé, il envoie automatiquement un message ContainerBuilder en DM à tous les propriétaires des serveurs où le bot est présent.
+- Le message contient le numéro de version et le contenu du fichier `PATCH_NOTES.md`.
+- La dernière version envoyée est ensuite sauvegardée pour éviter les envois répétés.
+
+### Utilisation
+
+Pour envoyer des patch notes aux propriétaires de serveur :
+
+1. Créez ou modifiez le fichier `PATCH_NOTES.md` à la racine du projet avec vos notes de mise à jour.
+2. Incrémentez la version dans `package.json` (par exemple de `"2.1.0"` à `"2.2.0"`).
+3. Redémarrez le bot avec `npm run dev`.
+
+Le bot enverra automatiquement les patch notes à tous les propriétaires de serveur.
+
+### Exemple de fichier PATCH_NOTES.md
+
+```markdown
+## Nouveautés
+- Ajout d'une nouvelle fonctionnalité X
+- Amélioration de la performance Y
+
+## Corrections
+- Correction du bug Z
+```
+
+### Désactivation
+
+Si vous ne souhaitez pas utiliser ce système, il suffit de supprimer le fichier `PATCH_NOTES.md`. Le bot démarrera normalement sans tenter d'envoyer de patch notes.
+
+### Forcer un renvoi
+
+Pour forcer l'envoi des patch notes sans changer la version, supprimez le fichier `config/lastPatchNoteVersion.json` et redémarrez le bot.
+
 ## Prérequis
 
 - Node.js 22 ou plus récent.

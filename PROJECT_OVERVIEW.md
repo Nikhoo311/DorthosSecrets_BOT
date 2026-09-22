@@ -8,7 +8,8 @@ Ce dépôt contient un bot Discord qui propose plusieurs fonctionnalités indép
 - enregistrer et afficher le Gear Score (AP + DP) des membres d'une guilde ;
 - programmer des messages automatiques récurrents et envoyer des messages ponctuels ;
 - configurer le message de bienvenue et les rôles officiers par serveur ;
-- alimenter l'annuaire de guilde du site en synchronisant le pseudo, l'avatar et le rôle principal de chaque membre.
+- alimenter l'annuaire de guilde du site en synchronisant le pseudo, l'avatar et le rôle principal de chaque membre ;
+- envoyer automatiquement les notes de mise à jour aux propriétaires de serveur lors du démarrage.
 
 Le bot ne contient ni le site Dorthos Secrets ni son contenu. La recherche dépend de l'index public `${SITE_URL}/pages.json`. Toutes les autres données (Gear Score, configuration par serveur, messages automatiques, cache de l'annuaire) sont stockées dans **Supabase (Postgres)**, la même base que celle utilisée par le site Dorthos Secrets. Le bot s'y connecte avec la clé `service_role`, qui contourne le Row Level Security (RLS) : c'est ce qui lui permet d'écrire librement dans des tables où le site, lui, n'a qu'un accès restreint par RLS.
 
@@ -40,8 +41,9 @@ Démarrage
   → les commandes sont enregistrées auprès de l'API Discord
   → connexion avec TOKEN
   → à l'événement clientReady : startAutomaticMessages (charge le cache des
-    messages programmés) puis startGuildMembersCacheSync (première
-    synchronisation de l'annuaire de guilde)
+    messages programmés), startGuildMembersCacheSync (première
+    synchronisation de l'annuaire de guilde), puis sendPatchNotesIfVersionChanged
+    (envoi des patch notes si la version a changé)
 
 /recherche, /aide ou /help
   → ouverture de la modal (terme + catégorie)
@@ -123,7 +125,8 @@ src/
 │   ├── handlers/                        # chargement automatique
 │   └── utils/
 │       ├── supabase.js                  # client Supabase (clé service_role)
-│       └── Logger.js                    # logs console
+│       ├── Logger.js                    # logs console
+│       └── toColorInt.js               # conversion hex → int pour les couleurs Discord
 └── modules/
     ├── search/
     │   ├── siteIndex.js                 # fetch, index MiniSearch et cache
@@ -134,6 +137,8 @@ src/
     │   └── panel.js                     # panneau /parametres (bienvenue, officiers)
     ├── messagesAuto/
     │   └── messagesAuto.js              # CRUD Supabase de messages_auto, planification, envoi
+    ├── patchNotes/
+    │   └── patchNotes.js                # envoi automatique des patch notes aux owners
     └── stuff/
         ├── players.js                   # lecture/écriture Supabase de players et validation
         ├── guildMembersCache.js         # synchronisation périodique de guild_members_cache
@@ -201,6 +206,61 @@ Cette table n'est jamais lue par le bot : elle existe uniquement pour que l'annu
 
 C'est pour cette synchronisation, en plus du message de bienvenue, que le bot a besoin de l'intent privilégié **Server Members Intent** (`GatewayIntentBits.GuildMembers`).
 
+## Système de Patch Notes
+
+`src/modules/patchNotes/patchNotes.js` gère l'envoi automatique des notes de mise à jour aux propriétaires de serveur lors du démarrage du bot.
+
+### Fonctionnement
+
+Au démarrage (dans `src/events/ready.js`), le système :
+
+1. Vérifie si le fichier `PATCH_NOTES.md` existe à la racine du projet
+2. Si le fichier existe, lit la version actuelle depuis `package.json`
+3. Compare avec la dernière version envoyée (stockée dans `config/lastPatchNoteVersion.json`)
+4. Si les versions diffèrent :
+   - Construit un ContainerBuilder avec le titre "Patch Notes - v{version}" et le contenu du fichier markdown
+   - Utilise la couleur verte (`config.color.green`) comme accent
+   - Envoie le message en DM à tous les propriétaires des serveurs où le bot est présent (`guild.ownerId`)
+   - Met à jour `config/lastPatchNoteVersion.json` avec la nouvelle version
+5. Si le fichier `PATCH_NOTES.md` n'existe pas, le bot continue normalement sans erreur
+
+### Cycle d'exécution
+
+```text
+Démarrage du bot
+  → événement clientReady dans src/events/ready.js
+  → appel de sendPatchNotesIfVersionChanged(client)
+  → vérification de l'existence de PATCH_NOTES.md
+  → lecture de la version depuis package.json
+  → comparaison avec la dernière version envoyée
+  → si version différente :
+    → construction du ContainerBuilder (titre + contenu)
+    → envoi en DM à tous les guild.ownerId
+    → sauvegarde de la nouvelle version dans config/lastPatchNoteVersion.json
+```
+
+### Utilisation
+
+Pour envoyer des patch notes :
+
+1. Créer/modifier `PATCH_NOTES.md` à la racine avec le contenu des notes
+2. Incrémenter la version dans `package.json`
+3. Redémarrer le bot
+
+Pour désactiver : supprimer `PATCH_NOTES.md`. Le bot démarrera normalement.
+
+Pour forcer un renvoi sans changer de version : supprimer `config/lastPatchNoteVersion.json` et redémarrer.
+
+### Structure
+
+```text
+src/modules/patchNotes/
+└── patchNotes.js                          # gestion des patch notes
+config/
+└── lastPatchNoteVersion.json              # fichier de suivi (créé automatiquement)
+PATCH_NOTES.md                             # contenu des patch notes (à la racine)
+```
+
 ## Rendu Canvas et thème visuel
 
 Le projet utilise `@napi-rs/canvas` pour produire des images PNG envoyées comme pièces jointes Discord. Cela permet d'avoir une présentation homogène, qui ne dépend pas du rendu des embeds Discord.
@@ -236,3 +296,4 @@ Le guide d'installation et d'exploitation destiné aux utilisateurs est dans [RE
 3. Les erreurs de boutons, modals et menus sont principalement journalisées : elles ne produisent pas toujours de message de secours visible par l'utilisateur.
 4. La connexion Supabase repose sur `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` ; cette clé contourne le RLS, elle doit donc rester strictement côté serveur du bot.
 5. `GuildMembers` est un intent privilégié : il doit être activé dans le portail développeur Discord pour l'application utilisée, sous peine d'erreur `Used disallowed intents` au démarrage. Il est requis à la fois pour le message de bienvenue et pour la synchronisation de l'annuaire de guilde.
+6. Le système de patch notes dépend de l'existence du fichier `PATCH_NOTES.md` à la racine du projet. S'il est absent, le bot démarre normalement sans envoyer de patch notes. Le fichier `config/lastPatchNoteVersion.json` est créé automatiquement lors du premier envoi.
