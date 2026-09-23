@@ -3,6 +3,8 @@ const players = require("../modules/stuff/players.js");
 const { getGuildConfiguration } = require("../modules/configuration/configuration.js");
 const { showGsModifierModal } = require("../components/modal-gs-modifier.js");
 const { buildPlayerCard, buildLeaderboard } = require("../modules/stuff/resultMessage.js");
+const { needsRegeneration, generateAllPages, deleteCachedImages, sendCachedImages, saveDataHash, calculateDataHash } = require("../modules/stuff/leaderboardCache.js");
+const logger = require("../functions/utils/Logger");
 
 const data = new SlashCommandBuilder()
     .setName("gs")
@@ -83,9 +85,30 @@ async function execute(interaction) {
     }
 
     if (sub === "tous") {
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const allPlayers = await players.getAllPlayers();
-        await interaction.editReply(await buildLeaderboard(await withAvatars(allPlayers, interaction.client), null, 1, 10, false, interaction.user.id));
+        const playersWithAvatars = await withAvatars(allPlayers, interaction.client);
+        
+        try {
+            if (await needsRegeneration(playersWithAvatars)) {
+                await interaction.editReply("⏳ Génération des images en cours... Cela peut prendre quelques secondes.");
+                
+                await deleteCachedImages();
+                const totalPages = await generateAllPages(playersWithAvatars);
+                const currentHash = calculateDataHash(playersWithAvatars);
+                await saveDataHash(currentHash, totalPages);
+                
+                await interaction.editReply("✅ Images générées ! Envoi en cours...");
+            } else {
+                await interaction.editReply("📷 Envoi des images en cours...");
+            }
+            
+            await sendCachedImages(interaction.channel, interaction.user.id, interaction.user.username);
+        } catch (error) {
+            logger.error(`Erreur avec le système de cache : ${error.message}`);
+            await interaction.editReply("⚠️ Erreur avec le système de cache, utilisation du système classique...");
+            await interaction.editReply(await buildLeaderboard(playersWithAvatars, null, 1, 10, false, interaction.user.id));
+        }
     }
 }
 
