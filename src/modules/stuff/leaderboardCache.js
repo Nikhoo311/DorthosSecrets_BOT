@@ -48,9 +48,9 @@ async function saveDataHash(hash, totalPages) {
 }
 
 function calculateDataHash(players) {
-    const dataString = players
+    const dataString = [...players]
         .sort((a, b) => a.discordId.localeCompare(b.discordId))
-        .map(p => `${p.discordId}:${p.ap}:${p.dp}:${p.gs}:${p.updatedAt}`)
+        .map((p) => `${p.discordId}:${p.ap}:${p.dp}:${p.gs}:${p.updatedAt}`)
         .join("|");
     return createHash("sha256").update(dataString).digest("hex");
 }

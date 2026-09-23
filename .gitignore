@@ -1,6 +1,6 @@
 config/*.json
 !config/*.example.json
-config/images/f
+config/images/
 node_modules/
 img/
 pdf/
